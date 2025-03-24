@@ -205,7 +205,7 @@ class ChatManager:
 
                 if self.bot_config.mcp_servers:
                     # Initialize MCP and system prompt if MCP server settings exist
-                    await self.mcp_manager.connect_to_stdio_servers(self.bot_config.mcp_servers, exit_stack)
+                    await self.mcp_manager.connect_to_servers(self.bot_config.mcp_servers)
                     self.system_prompt += await self.mcp_manager.get_mcp_prompt(self.bot_config.mcp_servers, prompt_service)
 
                 if self.verbose:

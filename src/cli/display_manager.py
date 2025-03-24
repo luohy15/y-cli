@@ -76,6 +76,10 @@ class DisplayManager:
         if isinstance(content, list):
             content = next((part.text for part in content if part.type == 'text'), '')
 
+        # replace <thinking> and </thinking> with thinking emoji
+        for tag in ['<thinking>', '</thinking>']:
+            content = content.replace(tag, '🤔')
+
         # Construct display content with reasoning first
         display_content = ""
         if message.reasoning_content:

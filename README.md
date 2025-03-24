@@ -29,13 +29,11 @@ A tiny command-line interface chat application that brings AI conversations to y
 ➜  ~ y-cli bot list
 Name         API Key      API Type    Base URL                             Model                                Print Speed    Description    OpenRouter Config    MCP Servers    Reasoning Effort
 -----------  -----------  ----------  -----------------------------------  -----------------------------------  -------------  -------------  -------------------  -------------  ------------------
-default      sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  google/gemini-2.0-flash-001          200            N/A            Yes                  No             N/A
-claude       sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  anthropic/claude-3.7-sonnet:beta     60             N/A            Yes                  todo           N/A
-o3-mini      sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  openai/o3-mini                       60             N/A            Yes                  No             low
-ds-chat      sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  deepseek/deepseek-chat               100            N/A            Yes                  No             N/A
-ds-r1        sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  deepseek/deepseek-r1                 100            N/A            Yes                  tavily         N/A
-groq-r1-70b  sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  deepseek/deepseek-r1-distill-lla...  1000           N/A            Yes                  No             N/A
-dify-bot     app-2drF...  dify        https://api.dify.ai/v1                                                    60             N/A            No                   No             N/A
+default      sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  google/gemini-2.0-flash-001          None            N/A            Yes                  No             N/A
+claude       sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  anthropic/claude-3.7-sonnet:beta     None             N/A            Yes                  todo           N/A
+o3-mini      sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  openai/o3-mini                       None             N/A            Yes                  No             low
+ds-r1        sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  deepseek/deepseek-r1                 None            N/A            Yes                  tavily         N/A
+dify-bot     app-2drF...  dify        https://api.dify.ai/v1                                                    None             N/A            No                   No             N/A
 ```
 
 ### Reasoning model & MCP client
@@ -47,11 +45,11 @@ dify-bot     app-2drF...  dify        https://api.dify.ai/v1                    
 ### Multiple MCP servers
 ```
 ➜  ~ y-cli mcp list
-Name    Command    Arguments                                Environment
-------  ---------  ---------------------------------------  ---------------------------------------
-todo    uvx        mcp-todo
-tavily  npx        -y tavily-mcp                            TAVILY_API_KEY=tvly-api-key...
-pplx    node       /Users/mac/src/researcher-mcp/build/...  PERPLEXITY_API_KEY=pplx-api-key...
+Name            Type    Command/URL          Arguments/Token    Environment     Auto-Confirm
+--------------  ------  -------------------  -----------------  --------------  --------------
+brave-search    sse     https://router.m...                                     brave_web_s...
+todo            stdio   uvx                  mcp-todo
+exa-mcp-server  stdio   npx                  exa-mcp-server     EXA_API_KEY...
 ```
 
 ## ⚡ Quick Start

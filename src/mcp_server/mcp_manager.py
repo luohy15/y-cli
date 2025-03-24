@@ -39,7 +39,7 @@ class MCPManager:
             self.use_daemon = False
             return False
 
-    async def connect_to_stdio_servers(self, servers: List[str], exit_stack: AsyncExitStack):
+    async def connect_to_servers(self, servers: List[str]):
         """Connect to specified MCP servers"""
         # First check if daemon is running
         daemon_running = await self.check_daemon_running()

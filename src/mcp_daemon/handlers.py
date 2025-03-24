@@ -18,7 +18,6 @@ class RequestHandler:
             
             handlers = {
                 "execute_tool": self.handle_execute_tool,
-                "extract_tool_use": self.handle_extract_tool_use,
                 "list_servers": self.handle_list_servers,
                 "list_server_tools": self.handle_list_server_tools,
                 "list_server_resource_templates": self.handle_list_resource_templates,
@@ -84,56 +83,6 @@ class RequestHandler:
                 status="error",
                 error=f"Error executing MCP tool: {str(e)}"
             ).to_dict()
-
-    def handle_extract_tool_use(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract MCP tool use from content"""
-        content = request.get("content", "")
-        result = self.extract_mcp_tool_use(content)
-        
-        if result:
-            server_name, tool_name, arguments = result
-            return MCPResponse(
-                status="success",
-                content=json.dumps({
-                    "server_name": server_name,
-                    "tool_name": tool_name,
-                    "arguments": arguments
-                })
-            ).to_dict()
-        
-        return MCPResponse(
-            status="error",
-            error="No MCP tool use found in content"
-        ).to_dict()
-
-    def extract_mcp_tool_use(self, content: str) -> Optional[Tuple[str, str, dict]]:
-        """Extract MCP tool use details from content"""
-        match = re.search(r'<use_mcp_tool>(.*?)</use_mcp_tool>', content, re.DOTALL)
-        if not match:
-            return None
-
-        tool_content = match.group(1)
-
-        server_match = re.search(r'<server_name>(.*?)</server_name>', tool_content)
-        if not server_match:
-            return None
-        server_name = server_match.group(1).strip()
-
-        tool_match = re.search(r'<tool_name>(.*?)</tool_name>', tool_content)
-        if not tool_match:
-            return None
-        tool_name = tool_match.group(1).strip()
-
-        args_match = re.search(r'<arguments>\s*(\{.*?\})\s*</arguments>', tool_content, re.DOTALL)
-        if not args_match:
-            return None
-
-        try:
-            arguments = json.loads(args_match.group(1))
-        except json.JSONDecodeError:
-            return None
-
-        return (server_name, tool_name, arguments)
 
     async def handle_list_servers(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """List all connected MCP servers"""
