@@ -1,24 +1,45 @@
-from typing import Dict, List
+from dataclasses import dataclass, asdict, field
+from typing import Dict, List, Optional
 
+@dataclass
 class McpServerConfig:
     """
     Configuration class for MCP (Model Context Protocol) server settings.
     
     Attributes:
         name (str): The name of the MCP server
-        command (str): The command to execute the server (e.g., 'node', 'python')
-        args (list[str]): Command line arguments for the server
-        env (dict[str, str]): Environment variables for the server process
+        command (str): The command to execute the server (e.g., 'node', 'python') - used for stdio
+        args (list[str]): Command line arguments for the server - used for stdio
+        env (dict[str, str]): Environment variables for the server process - used for stdio
+        url (str, optional): The URL endpoint for SSE server connection
+        token (str, optional): The authentication token for SSE server connection
     """
     
-    def __init__(
-        self,
-        name: str,
-        command: str,
-        args: List[str],
-        env: Dict[str, str]
-    ):
-        self.name = name
-        self.command = command
-        self.args = args
-        self.env = env
+    name: str
+    command: Optional[str] = None
+    args: List[str] = field(default_factory=list)
+    env: Dict[str, str] = field(default_factory=dict)
+    url: Optional[str] = None
+    token: Optional[str] = None
+    
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'McpServerConfig':
+        """
+        Create a McpServerConfig instance from a dictionary
+        
+        Args:
+            data (Dict): Dictionary containing McpServerConfig attributes
+            
+        Returns:
+            McpServerConfig: A new McpServerConfig instance
+        """
+        return cls(**data)
+        
+    def to_dict(self) -> Dict:
+        """
+        Convert the McpServerConfig to a dictionary, excluding None values
+        
+        Returns:
+            Dict: Dictionary representation of the McpServerConfig
+        """
+        return {k: v for k, v in asdict(self).items() if v is not None}

@@ -25,7 +25,7 @@ def start_daemon(socket: Optional[str], log: Optional[str], foreground: bool):
         return
     
     # Get daemon script path
-    daemon_script = Path(__file__).parent.parent.parent.parent / "mcp_server" / "daemon.py"
+    daemon_script = Path(__file__).parent.parent.parent.parent / "mcp_daemon" / "main.py"
     
     # Get socket and log paths
     socket_path = socket or get_default_socket_path()

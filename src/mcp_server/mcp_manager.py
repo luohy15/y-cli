@@ -3,12 +3,10 @@ import asyncio
 import os
 import sys
 from typing import Dict, List, Optional, Tuple, Any
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from mcp import ClientSession
 from rich.console import Console
 from contextlib import AsyncExitStack
-from .client import MCPDaemonClient
-from config import mcp_service
+from .daemon_client import MCPDaemonClient
 from loguru import logger
 
 class MCPManager:
@@ -40,43 +38,6 @@ class MCPManager:
             logger.error(f"Error checking daemon status: {str(e)}")
             self.use_daemon = False
             return False
-
-    async def connect_to_stdio_server(self, server_name: str, exit_stack: AsyncExitStack):
-        """Connect to an MCP server using configuration from service"""
-        # If using daemon, no need to connect directly
-        if self.use_daemon:
-            return
-            
-        try:
-            server_config = mcp_service.get_config(server_name)
-            if not server_config:
-                self.console.print(f"[red]Error: No configuration found for server '{server_name}'[/red]")
-                return
-
-            # Merge current environment with server config env
-            env = dict(os.environ)
-            env.update(server_config.env)
-
-            server_params = StdioServerParameters(
-                command=server_config.command,
-                args=server_config.args,
-                env=env
-            )
-
-            stdio_transport = await exit_stack.enter_async_context(stdio_client(server_params))
-            stdio, write = stdio_transport
-            session = await exit_stack.enter_async_context(ClientSession(stdio, write))
-
-            await session.initialize()
-
-            self.sessions[server_name] = session
-            self.console.print(f"[green]Connected to server '{server_name}'[/green]")
-
-        except Exception as e:
-            self.console.print(f"[red]Error connecting to server '{server_name}': {str(e)}[/red]")
-            if hasattr(e, '__traceback__'):
-                import traceback
-                self.console.print(f"[red]Detailed error:\n{''.join(traceback.format_tb(e.__traceback__))}[/red]")
 
     async def connect_to_stdio_servers(self, servers: List[str], exit_stack: AsyncExitStack):
         """Connect to specified MCP servers"""
@@ -133,12 +94,13 @@ class MCPManager:
         """Execute an MCP tool and return the results"""
         try:
             self.console.print(f"[cyan]Executing MCP tool '{tool_name}' on server '{server_name}' via daemon[/cyan]")
-            response = await self.client.execute_tool(server_name, tool_name, arguments)
+            # Use structured response
+            response = await self.client.execute_tool_structured(server_name, tool_name, arguments)
             
-            if response.get("status") == "success":
-                return response.get("content", "No content returned from daemon")
+            if response.is_success():
+                return response.content or "No content returned from daemon"
             else:
-                error_msg = response.get("error", "Unknown error")
+                error_msg = response.error or "Unknown error"
                 self.console.print(f"[red]Error from daemon: {error_msg}[/red]")
                 return f"Error executing MCP tool: {error_msg}"
         except Exception as e:
@@ -155,6 +117,70 @@ class MCPManager:
             
         # Clear direct sessions
         self.sessions.clear()
+
+    async def _format_tools_section(self, server_name: str) -> str:
+        """Format the tools section for a server"""
+        try:
+            # Get tools list - now returns parsed list directly
+            tools = await self.client.list_server_tools(server_name)
+            
+            if not tools:
+                return ""
+                
+            formatted_tools = []
+            for tool in tools:
+                schema_str = ""
+                if tool.get("inputSchema"):
+                    schema_json = json.dumps(tool.get("inputSchema"), indent=2)
+                    schema_lines = schema_json.split("\n")
+                    schema_str = "\n    Input Schema:\n    " + "\n    ".join(schema_lines)
+                        
+                formatted_tools.append(f"- {tool.get('name')}: {tool.get('description')}{schema_str}")
+                
+            return "\n\n### Available Tools\n" + "\n\n".join(formatted_tools) if formatted_tools else ""
+        except Exception as e:
+            logger.error(f"Error formatting tools for {server_name}: {str(e)}")
+            return ""
+
+    async def _format_templates_section(self, server_name: str) -> str:
+        """Format the resource templates section for a server"""
+        try:
+            # Get templates list - now returns parsed list directly
+            templates = await self.client.list_server_resource_templates(server_name)
+            
+            if not templates:
+                return ""
+                
+            formatted_templates = []
+            for template in templates:
+                formatted_templates.append(
+                    f"- {template.get('uriTemplate')} ({template.get('name')}): {template.get('description')}"
+                )
+                
+            return "\n\n### Resource Templates\n" + "\n".join(formatted_templates) if formatted_templates else ""
+        except Exception as e:
+            logger.debug(f"Error formatting resource templates for {server_name}: {str(e)}")
+            return ""
+
+    async def _format_resources_section(self, server_name: str) -> str:
+        """Format the direct resources section for a server"""
+        try:
+            # Get resources list - now returns parsed list directly
+            resources = await self.client.list_server_resources(server_name)
+            
+            if not resources:
+                return ""
+                
+            formatted_resources = []
+            for resource in resources:
+                formatted_resources.append(
+                    f"- {resource.get('uri')} ({resource.get('name')}): {resource.get('description')}"
+                )
+                
+            return "\n\n### Direct Resources\n" + "\n".join(formatted_resources) if formatted_resources else ""
+        except Exception as e:
+            logger.debug(f"Error formatting resources for {server_name}: {str(e)}")
+            return ""
 
     async def format_server_info(self, servers) -> str:
         """
@@ -173,56 +199,10 @@ class MCPManager:
         server_sections = []
         
         for server_name in servers:
-            # Get server information
-            tools_section = ""
-            templates_section = ""
-            resources_section = ""
-            
-            try:
-                # Get and format tools section
-                tools_response = await self.client.list_server_tools(server_name)
-                if tools_response.get("status") == "success" and tools_response.get("tools"):
-                    tools = []
-                    for tool in tools_response.get("tools", []):
-                        schema_str = ""
-                        if tool.get("inputSchema"):
-                            schema_json = json.dumps(tool.get("inputSchema"), indent=2)
-                            schema_lines = schema_json.split("\n")
-                            schema_str = "\n    Input Schema:\n    " + "\n    ".join(schema_lines)
-                            
-                        tools.append(f"- {tool.get('name')}: {tool.get('description')}{schema_str}")
-                    
-                    tools_section = "\n\n### Available Tools\n" + "\n\n".join(tools)
-            except Exception as e:
-                logger.error(f"Error listing tools for {server_name} via daemon: {str(e)}")
-            
-            try:
-                # Get and format resource templates section
-                templates_response = await self.client.list_server_resource_templates(server_name)
-                if templates_response.get("status") == "success" and templates_response.get("resource_templates"):
-                    templates = []
-                    for template in templates_response.get("resource_templates", []):
-                        templates.append(
-                            f"- {template.get('uriTemplate')} ({template.get('name')}): {template.get('description')}"
-                        )
-                    
-                    templates_section = "\n\n### Resource Templates\n" + "\n".join(templates)
-            except Exception as e:
-                logger.debug(f"Error listing resource templates for {server_name} via daemon: {str(e)}")
-            
-            try:
-                # Get and format direct resources section
-                resources_response = await self.client.list_server_resources(server_name)
-                if resources_response.get("status") == "success" and resources_response.get("resources"):
-                    resources = []
-                    for resource in resources_response.get("resources", []):
-                        resources.append(
-                            f"- {resource.get('uri')} ({resource.get('name')}): {resource.get('description')}"
-                        )
-                    
-                    resources_section = "\n\n### Direct Resources\n" + "\n".join(resources)
-            except Exception as e:
-                logger.debug(f"Error listing resources for {server_name} via daemon: {str(e)}")
+            # Gather all sections for this server
+            tools_section = await self._format_tools_section(server_name)
+            templates_section = await self._format_templates_section(server_name)
+            resources_section = await self._format_resources_section(server_name)
             
             # Combine all sections
             server_section = (

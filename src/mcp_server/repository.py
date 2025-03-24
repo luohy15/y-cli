@@ -31,12 +31,7 @@ class McpServerConfigRepository:
                 for line in f:
                     if line.strip():
                         data = json.loads(line)
-                        configs.append(McpServerConfig(
-                            name=data['name'],
-                            command=data['command'],
-                            args=data['args'],
-                            env=data['env']
-                        ))
+                        configs.append(McpServerConfig.from_dict(data))
             return configs
         except Exception as e:
             print(f"Error loading MCP configs: {str(e)}")
@@ -59,12 +54,7 @@ class McpServerConfigRepository:
             # Write each config as a JSON line
             with open(self.config_path, 'w') as f:
                 for config in configs:
-                    line = json.dumps({
-                        'name': config.name,
-                        'command': config.command,
-                        'args': config.args,
-                        'env': config.env
-                    })
+                    line = json.dumps(config.to_dict())
                     f.write(line + '\n')
             return True
         except Exception as e:
