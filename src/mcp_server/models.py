@@ -13,6 +13,7 @@ class McpServerConfig:
         env (dict[str, str]): Environment variables for the server process - used for stdio
         url (str, optional): The URL endpoint for SSE server connection
         token (str, optional): The authentication token for SSE server connection
+        auto_confirm (list[str], optional): List of tool names that should be auto-confirmed without user prompt
     """
     
     name: str
@@ -21,6 +22,7 @@ class McpServerConfig:
     env: Dict[str, str] = field(default_factory=dict)
     url: Optional[str] = None
     token: Optional[str] = None
+    auto_confirm: List[str] = field(default_factory=list)
     
     @classmethod
     def from_dict(cls, data: Dict) -> 'McpServerConfig':

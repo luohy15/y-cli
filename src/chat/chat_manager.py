@@ -14,7 +14,7 @@ from .utils.tool_utils import contains_tool_use, split_content
 from .utils.message_utils import create_message
 from .provider.base_provider import BaseProvider
 from bot import BotConfig
-from config import prompt_service
+from config import prompt_service, mcp_service
 from config import config
 from loguru import logger
 
@@ -82,8 +82,26 @@ class ChatManager:
         if self.verbose:
             logger.info(f"Loaded {len(self.messages)} messages from chat {chat_id}")
 
-    def get_user_confirmation(self, content: str) -> bool:
-        """Get user confirmation before executing tool use"""
+    def get_user_confirmation(self, content: str, server_name: str = None, tool_name: str = None) -> bool:
+        """Get user confirmation before executing tool use
+
+        Args:
+            content: The tool use content
+            server_name: The MCP server name
+            tool_name: The tool name being executed
+
+        Returns:
+            bool: True if confirmed, False otherwise
+        """
+        # Check if auto_confirm is enabled for this tool
+        if server_name and tool_name and self.bot_config.mcp_servers:
+            server_config = mcp_service.get_config(server_name)
+            if server_config and hasattr(server_config, 'auto_confirm') and tool_name in server_config.auto_confirm:
+                if self.verbose:
+                    logger.info(f"Auto-confirming tool use for {server_name}/{tool_name}")
+                return True
+
+        # Otherwise proceed with normal confirmation
         self.display_manager.console.print("\n[yellow]Tool use detected in response:[/yellow]")
         while True:
             response = input("\nWould you like to proceed with tool execution? (y/n): ").strip().lower()
@@ -132,7 +150,7 @@ class ChatManager:
         self.display_manager.display_message_panel(assistant_message, index=len(self.messages) - 1)
 
         # Get user confirmation for tool execution
-        if not self.get_user_confirmation(tool_content):
+        if not self.get_user_confirmation(tool_content, server_name, tool_name):
             no_exec_msg = "Tool execution cancelled by user."
             self.display_manager.console.print(f"\n[yellow]{no_exec_msg}[/yellow]")
             user_message = create_message("user", no_exec_msg)
