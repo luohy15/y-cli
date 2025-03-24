@@ -59,23 +59,37 @@ class McpServerConfigService:
     def create_config(
         self,
         name: str,
-        command: str,
-        args: List[str],
-        env: dict[str, str]
+        command: Optional[str] = None,
+        args: Optional[List[str]] = None,
+        env: Optional[dict[str, str]] = None,
+        url: Optional[str] = None,
+        token: Optional[str] = None,
+        auto_confirm: Optional[List[str]] = None
     ) -> bool:
         """
         Create a new MCP setting
         
         Args:
             name (str): Name of the MCP server
-            command (str): Command to execute the server
-            args (List[str]): Command line arguments
-            env (dict[str, str]): Environment variables
+            command (str, optional): Command to execute the server (for stdio)
+            args (List[str], optional): Command line arguments (for stdio)
+            env (dict[str, str], optional): Environment variables (for stdio)
+            url (str, optional): The URL endpoint for server connection (for SSE)
+            token (str, optional): The authentication token (for SSE)
+            auto_confirm (List[str], optional): List of tool names that should be auto-confirmed
             
         Returns:
             bool: True if creation was successful, False otherwise
         """
-        setting = McpServerConfig(name=name, command=command, args=args, env=env)
+        setting = McpServerConfig(
+            name=name, 
+            command=command, 
+            args=args or [], 
+            env=env or {}, 
+            url=url, 
+            token=token,
+            auto_confirm=auto_confirm or []
+        )
         return self.repository.add_or_update(setting)
         
     def update_config(self, setting: McpServerConfig) -> bool:

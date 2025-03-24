@@ -1,7 +1,7 @@
 import click
 import shutil
 from tabulate import tabulate
-from typing import List
+from typing import List, Optional
 
 from mcp_server.models import McpServerConfig
 from mcp_server.service import McpServerConfigService
@@ -12,6 +12,12 @@ def truncate_text(text, max_length):
     if not text or len(str(text)) <= max_length:
         return text
     return str(text)[:max_length-3] + "..."
+
+def get_server_type(config: McpServerConfig) -> str:
+    """Determine server type from configuration."""
+    if config.url:
+        return "sse"
+    return "stdio"
 
 @click.command('list')
 @click.option('--verbose', '-v', is_flag=True, help='Show detailed information')
@@ -38,10 +44,12 @@ def mcp_list(verbose: bool = False):
     
     # Define column width ratios (total should be < 1 to leave space for separators)
     width_ratios = {
-        "Name": 0.2,
-        "Command": 0.2,
-        "Arguments": 0.3,
-        "Environment": 0.3
+        "Name": 0.15,
+        "Type": 0.1,
+        "Command/URL": 0.2,
+        "Arguments/Token": 0.2,
+        "Environment": 0.15,
+        "Auto-Confirm": 0.15
     }
     
     # Calculate actual column widths
@@ -50,20 +58,32 @@ def mcp_list(verbose: bool = False):
     
     # Prepare table data with truncated values
     table_data = []
-    headers = ["Name", "Command", "Arguments", "Environment"]
+    headers = ["Name", "Type", "Command/URL", "Arguments/Token", "Environment", "Auto-Confirm"]
     
     for config in configs:
-        # Format args list for display
-        args_str = ' '.join(config.args) if config.args else ''
+        server_type = get_server_type(config)
+        
+        # Determine display values based on server type
+        if server_type == "stdio":
+            command_or_url = config.command or ""
+            args_or_token = ' '.join(config.args) if config.args else ''
+        else:  # sse
+            command_or_url = config.url or ""
+            args_or_token = config.token or ""
         
         # Format env dict for display
         env_str = ', '.join(f'{k}={v}' for k, v in config.env.items()) if config.env else ''
         
+        # Format auto_confirm list for display
+        auto_confirm_str = ', '.join(config.auto_confirm) if config.auto_confirm else ''
+        
         table_data.append([
             truncate_text(config.name, col_widths["Name"]),
-            truncate_text(config.command, col_widths["Command"]),
-            truncate_text(args_str, col_widths["Arguments"]),
-            truncate_text(env_str, col_widths["Environment"])
+            server_type,
+            truncate_text(command_or_url, col_widths["Command/URL"]),
+            truncate_text(args_or_token, col_widths["Arguments/Token"]),
+            truncate_text(env_str, col_widths["Environment"]),
+            truncate_text(auto_confirm_str, col_widths["Auto-Confirm"])
         ])
     
     click.echo(tabulate(

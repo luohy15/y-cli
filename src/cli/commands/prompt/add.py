@@ -1,11 +1,13 @@
 import click
 from typing import Optional
 from prompt import PromptConfig
-from config import prompt_service
+from config import prompt_service, config
 
 @click.command('add')
 def prompt_add():
     """Add a new prompt configuration."""
+    # Tip about direct file editing
+    click.echo(f"TIP: For efficiency, you can directly edit the prompt configuration file at: {config['prompt_config_file']}")
     name = click.prompt("Prompt name")
     
     # Check if prompt already exists
