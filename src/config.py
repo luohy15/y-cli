@@ -40,8 +40,7 @@ def get_default_config():
         "s3_bucket": "",
         "cloudfront_distribution_id": "",
         "proxy_host": "",
-        "proxy_port": "",
-        "proxy_settings": {}  # Will store proxy settings to pass to httpx client
+        "proxy_port": ""
     }
 
 def load_config():

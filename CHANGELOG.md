@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.11] - 2025-03-25
+
+### Added
+- Cloudflare storage integration for chat data with KV and R2 support
+- MCP daemon for persistent MCP server connections between sessions
+- Prompt configuration management system with customizable prompts
+- Asynchronous repository operations for improved performance
+- Repository factory pattern for flexible storage selection
+- Cloudflare worker script for automated backups
+- Detailed documentation for new features
+
+### Changed
+- Refactored chat repository into modular structure
+- Updated chat manager to support async repository operations
+- Enhanced message models with MCP tool execution information
+- Improved logging with loguru integration
+- Updated system architecture documentation
+- Optimized display manager for tool execution representation
+
 ## [0.3.10] - 2025-02-25
 
 ### Added

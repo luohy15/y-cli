@@ -4,15 +4,20 @@ A tiny command-line interface chat application that brings AI conversations to y
 
 ## ✨ Features
 
-- 📝 All chat data stored in single JSONL files for easy access and sync
-- 💬 Interactive chat interface
+- 📝 Flexible storage options:
+  - Local JSONL files for easy access and sync
+  - Cloudflare KV and R2 for cloud storage and backup
+- 💬 Interactive chat interface with tool execution visualization
 - 🤖 Support for multiple bot configurations (any base_url/api_key/model combination). Supported api format type:
   - [OpenAI chat completion streaming format](https://platform.openai.com/docs/api-reference/chat/streaming)
   - [Dify chat-messages streaming format](https://docs.dify.ai/guides/application-publishing/developing-with-apis)
 - 🤔 Support for reasoning model
   - [Deepseek-r1 reasoning_content](https://api-docs.deepseek.com/guides/reasoning_model) output print
   - [OpenAI o3-mini reasoning_effort](https://platform.openai.com/docs/guides/reasoning) configuration 
-- 🔗 MCP (Model Context Protocol) client support with multiple server configurations
+- 🔗 MCP (Model Context Protocol) integration:
+  - Client support with multiple server configurations (stdio/SSE)
+  - Persistent daemon
+  - Custom prompt configurations
 
 ## Demo
 
@@ -57,6 +62,9 @@ Required:
 1. uv
 2. OpenRouter API key
 
+Optional:
+1. Cloudflare account (for cloud storage)
+
 Setup Instructions:
 1. **uv**
    - Follow the [official installation guide](https://docs.astral.sh/uv/getting-started/installation/)
@@ -66,6 +74,11 @@ Setup Instructions:
    - Visit [OpenRouter Settings](https://openrouter.ai/settings/keys)
    - Create a new API key
    - Save it for the initialization step
+
+3. **Cloudflare setup (optional)**
+   - Create a Cloudflare account if you don't have one
+   - Set up KV namespace and R2 bucket
+   - Check `docs/CLOUDFLARE_STORAGE.md` for detailed instructions
 
 ### Run without Installation
 ```bash
@@ -105,6 +118,16 @@ y-cli [OPTIONS] COMMAND [ARGS]...
   - `add`     Add a new MCP server configuration
   - `list`    List all configured MCP servers
   - `delete`  Delete an MCP server configuration
+- `daemon`  Manage the MCP daemon:
+  - `start`    Start the MCP daemon
+  - `stop`     Stop the MCP daemon
+  - `status`   Check daemon status
+  - `log`      View daemon logs
+  - `restart`  Restart the daemon
+- `prompt` Manage prompt configurations:
+  - `add`     Add a new prompt configuration
+  - `list`    List all configured prompts
+  - `delete`  Delete a prompt configuration
 
 ### Options
 - `--help`  Show help message and exit
