@@ -107,7 +107,7 @@ class Chat:
             create_time=data['create_time'],
             update_time=data['update_time'],
             messages=sorted(
-                [Message.from_dict(m) for m in data['messages'] if m['role'] != "system"],
+                [Message.from_dict(m) for m in data['messages'] if m['role'] != 'system'],
                 key=lambda x: (x.unix_timestamp)
             ),
             external_id=data.get('external_id')
@@ -127,7 +127,7 @@ class Chat:
     def update_messages(self, messages: List[Message]) -> None:
         # Filter out system messages and sort the remaining ones by timestamp
         self.messages = sorted(
-            [msg for msg in messages if msg.role != "system"],
+            [msg for msg in messages if msg.role != 'system'],
             key=lambda x: (x.unix_timestamp)
         )
         self.update_time = get_iso8601_timestamp()

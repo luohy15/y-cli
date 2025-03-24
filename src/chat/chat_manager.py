@@ -8,14 +8,14 @@ from .service import ChatService
 from cli.display_manager import DisplayManager
 from cli.input_manager import InputManager
 from mcp_server.mcp_manager import MCPManager
+from mcp_server.prompt import get_mcp_prompt
+from prompt.preset import time_prompt
 from util import generate_id
-from mcp_server.system import get_system_prompt
 from .utils.tool_utils import contains_tool_use, split_content
 from .utils.message_utils import create_message
 from .provider.base_provider import BaseProvider
-from .provider.openai_format_provider import OpenAIFormatProvider
-from .provider.dify_provider import DifyProvider
 from bot import BotConfig
+from config import prompt_service
 from config import config
 from loguru import logger
 
@@ -176,11 +176,20 @@ class ChatManager:
                     # await self.service.repository.get_chat(None)
                 if self.verbose:
                     logger.info("Chat loaded successfully")
-                
+
+                # Init basic system prompt
+                self.system_prompt = time_prompt
+                prompts = self.bot_config.prompts
+                for prompt in prompts:
+                    if prompt not in ["mcp"]:
+                        prompt_config = prompt_service.get_prompt(prompt)
+                        if prompt_config:
+                            self.system_prompt += prompt_config.content + "\n"
+
                 if self.bot_config.mcp_servers:
                     # Initialize MCP and system prompt if MCP server settings exist
                     await self.mcp_manager.connect_to_servers(self.bot_config.mcp_servers, exit_stack)
-                    self.system_prompt = await get_system_prompt(self.mcp_manager)
+                    self.system_prompt += await get_mcp_prompt(self.mcp_manager)
 
                 if self.verbose:
                     self.display_manager.display_help()

@@ -1,95 +1,12 @@
-import json
-from typing import Optional, Dict
-from mcp import ClientSession
 import datetime
 
-async def format_server_info(sessions: Dict[str, ClientSession]) -> str:
-    """Format MCP server information for the system prompt"""
-    if not sessions:
-        return "(No MCP servers currently connected)"
+# Get current datetime
+current_time = datetime.datetime.now()
+formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+time_prompt = f"Current Time: {formatted_time}"
 
-    server_sections = []
-
-    for server_name, session in sessions.items():
-        # Get server information
-        tools_section = ""
-        templates_section = ""
-        resources_section = ""
-
-        try:
-            # Get and format tools section
-            tools_response = await session.list_tools()
-            if tools_response and tools_response.tools:
-                tools = []
-                for tool in tools_response.tools:
-                    schema_str = ""
-                    if tool.inputSchema:
-                        schema_json = json.dumps(tool.inputSchema, indent=2)
-                        schema_lines = schema_json.split("\n")
-                        schema_str = "\n    Input Schema:\n    " + "\n    ".join(schema_lines)
-
-                    tools.append(f"- {tool.name}: {tool.description}{schema_str}")
-                tools_section = "\n\n### Available Tools\n" + "\n\n".join(tools)
-        except Exception as e:
-            print(f"Error listing tools for {server_name}: {str(e)}")
-
-        try:
-            # Get and format resource templates section
-            templates_response = await session.list_resource_templates()
-            if templates_response and templates_response.resourceTemplates:
-                templates = []
-                for template in templates_response.resourceTemplates:
-                    templates.append(
-                        f"- {template.uriTemplate} ({template.name}): {template.description}"
-                    )
-                templates_section = "\n\n### Resource Templates\n" + "\n".join(templates)
-        except Exception as e:
-            pass
-            # print(f"Error listing resource templates for {server_name}: {str(e)}")
-
-        try:
-            # Get and format direct resources section
-            resources_response = await session.list_resources()
-            if resources_response and resources_response.resources:
-                resources = []
-                for resource in resources_response.resources:
-                    resources.append(
-                        f"- {resource.uri} ({resource.name}): {resource.description}"
-                    )
-                resources_section = "\n\n### Direct Resources\n" + "\n".join(resources)
-        except Exception as e:
-            pass
-            # print(f"Error listing resources for {server_name}: {str(e)}")
-
-        # Combine all sections
-        server_section = (
-            f"## {server_name}"
-            f"{tools_section}"
-            f"{templates_section}"
-            f"{resources_section}"
-        )
-        server_sections.append(server_section)
-
-    return "\n\n".join(server_sections)
-
-async def get_system_prompt(mcp_client) -> str:
-    """Generate the complete system prompt including MCP server information"""
-    # Get current datetime
-    current_time = datetime.datetime.now()
-    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    
-    base_prompt = f"""You are y, my private assistant.
-====
-
-PRIVATE ASSISTANT
-
-Current Time: {formatted_time}
-
-y, you will be acting as my private assistant. You'll be responsible for a range of tasks, from project management to information gathering. You should be able to help with simple chat, task management, and more. I'll tell you what I require, and you'll do your best to meet my needs.
-
-"""
-    # copy from https://github.com/cline/cline/blob/main/src/core/prompts/system.ts
-    tool_use = """
+# copy from https://github.com/cline/cline/blob/main/src/core/prompts/system.ts
+mcp_prompt = """
 ====
 
 TOOL USE
@@ -205,9 +122,3 @@ When a server is connected, you can use the server's tools via the `use_mcp_tool
 While MCP servers can provide additional tools and resources, they are not always required. You can still perform a wide range of tasks without connecting to an MCP server. However, when you need additional capabilities or access to specific resources, connecting to an MCP server can greatly enhance your functionality.
 
 """
-
-    # Get formatted server information
-    server_info = await format_server_info(mcp_client.sessions)
-
-    # Combine base prompt with server information
-    return base_prompt + tool_use + server_info

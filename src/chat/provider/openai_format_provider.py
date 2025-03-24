@@ -31,10 +31,13 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
         # Create new list starting with system message if provided
         prepared_messages = []
         if system_prompt:
-            system_message = create_message("system", system_prompt)
+            system_message = create_message('system', system_prompt)
             system_message_dict = system_message.to_dict()
             if isinstance(system_message_dict["content"], str):
                 system_message_dict["content"] = [{"type": "text", "text": system_message_dict["content"]}]
+            # Remove timestamp fields, otherwise likely unsupported_country_region_territory
+            system_message_dict.pop("timestamp", None)
+            system_message_dict.pop("unix_timestamp", None)
             # add cache_control only to claude-3 series model
             if "claude-3" in self.bot_config.model:
                 for part in system_message_dict["content"]:

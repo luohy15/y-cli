@@ -1,12 +1,12 @@
-from typing import Optional
 import click
 
 from cli.commands.init import init
-from cli.commands.chat import chat
-from cli.commands.list import list_chats
-from cli.commands.share import share
+from cli.commands.chat.chat import chat
+from cli.commands.chat.list import list_chats
+from cli.commands.chat.share import share
 from cli.commands.bot import bot_group
 from cli.commands.mcp import mcp_group
+from cli.commands.prompt import prompt_group
 from config import bot_service
 
 @click.group()
@@ -29,6 +29,7 @@ cli.add_command(list_chats)
 cli.add_command(share)
 cli.add_command(bot_group)
 cli.add_command(mcp_group)
+cli.add_command(prompt_group)
 
 if __name__ == "__main__":
     cli()

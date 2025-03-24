@@ -22,6 +22,7 @@ def print_config_info():
     click.echo(f"{click.style('Chat data will be stored in:', fg='green')}\n{click.style(config['chat_file'], fg='cyan')}")
     click.echo(f"{click.style('Bot config data will be stored in:', fg='green')}\n{click.style(config['bot_config_file'], fg='cyan')}")
     click.echo(f"{click.style('MCP server config data will be stored in:', fg='green')}\n{click.style(config['mcp_config_file'], fg='cyan')}")
+    click.echo(f"{click.style('Prompt config data will be stored in:', fg='green')}\n{click.style(config['prompt_config_file'], fg='cyan')}")
     
     click.echo(f"\n{click.style('Optional settings that can be configured using `y-cli bot add`:', fg='green')}")
     click.echo(f"- {click.style('model:', fg='yellow')} The model to use for chat")
@@ -49,6 +50,9 @@ def init():
 
     Creates a config file then prompts for required settings.
     """
+    # print the version
+    click.echo(f"y-cli version: 0.3.11")
+
     # Get existing default config or create new one
     default_config = bot_service.get_config()
     
@@ -85,10 +89,7 @@ def init():
         name="default",
         api_key=api_key,
         base_url=default_config.base_url,
-        model=model,
-        print_speed=default_config.print_speed,
-        description=default_config.description,
-        mcp_servers=default_config.mcp_servers
+        model=model
     )
 
     # Update the default config

@@ -18,9 +18,10 @@ class BotConfig:
     api_key: str = ""
     api_type: Optional[str] = None
     model: str = ""
-    print_speed: int = 60
+    print_speed: int = None
     description: Optional[str] = None
     openrouter_config: Optional[Dict] = None
+    prompts: Optional[List[str]] = None
     mcp_servers: Optional[List[str]] = None
     max_tokens: Optional[int] = None
     custom_api_path: Optional[str] = None
