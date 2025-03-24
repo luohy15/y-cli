@@ -21,6 +21,9 @@ class Message:
     model: Optional[str] = None
     provider: Optional[str] = None
     id: Optional[str] = None
+    server: Optional[str] = None
+    tool: Optional[str] = None
+    arguments: Optional[Dict[str, Union[str, int, float, bool, Dict, List]]] = None
 
     @classmethod
     def from_dict(cls, data: Dict) -> 'Message':
@@ -48,7 +51,10 @@ class Message:
             links=data.get('links'),
             images=data.get('images'),
             model=data.get('model'),
-            id=data.get('id')
+            id=data.get('id'),
+            server=data.get('server'),
+            tool=data.get('tool'),
+            arguments=data.get('arguments')
         )
 
     def to_dict(self) -> Dict:
@@ -78,6 +84,12 @@ class Message:
             result['model'] = self.model
         if self.provider is not None:
             result['provider'] = self.provider
+        if self.server is not None:
+            result['server'] = self.server
+        if self.tool is not None:
+            result['tool'] = self.tool
+        if self.arguments is not None:
+            result['arguments'] = self.arguments
         return result
 
 @dataclass

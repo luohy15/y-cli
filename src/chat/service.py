@@ -112,6 +112,20 @@ class ChatService:
                 md_content += f'<details><summary>Reasoning</summary><div class="reasoning-content">\n\n{msg.reasoning_content}\n\n</div></details>\n\n'
 
             md_content += f"{msg.content}\n\n"
+            
+            # Add MCP server/tool info if available
+            if msg.role == 'assistant' and (msg.server or msg.tool):
+                mcp_info = "```\n"
+                if msg.server:
+                    mcp_info += f"Server: {msg.server}\n"
+                if msg.tool:
+                    mcp_info += f"Tool: {msg.tool}\n"
+                if msg.arguments:
+                    import json
+                    mcp_info += f"Arguments: {json.dumps(msg.arguments, indent=2, ensure_ascii=False)}\n"
+                mcp_info += "```\n"
+                md_content += f"{mcp_info}\n"
+            
             md_content += f"*{msg.timestamp}*\n\n---\n\n"
 
         # ensure tmp directory exists
@@ -160,6 +174,20 @@ details[open] summary {
     font-size: 0.875rem;
     font-weight: normal;
     color: #6b7280;
+}
+code {
+    background: #f1f5f9;
+    border-radius: 0.25rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.875rem;
+}
+pre {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
 }
 </style>
 '''

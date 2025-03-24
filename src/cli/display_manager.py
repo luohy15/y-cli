@@ -18,6 +18,7 @@ custom_theme = Theme({
     "user": "green",
     "assistant": "cyan",
     "system": "yellow",
+    "tool": "blue",
     "timestamp": "dim white",
 })
 
@@ -66,7 +67,7 @@ class DisplayManager:
         # Add model/provider info if available
         model_info = ""
         if message.model:
-            provider = f" via {message.provider}" if message.provider else ""
+            provider = f" @ {message.provider}" if message.provider else ""
             reasoning = f" (effort: {message.reasoning_effort})" if message.reasoning_effort else ""
             model_info = f" {message.model}{provider}{reasoning}"
 
@@ -81,10 +82,30 @@ class DisplayManager:
             display_content = f"```markdown\n{message.reasoning_content}\n```\n"
         display_content += content
 
+        # Add MCP server/tool info if available
+        if message.role == "assistant" and (message.server or message.tool):
+            mcp_info = "```\n"
+            if message.server:
+                mcp_info += f"Server: {message.server}\n"
+            if message.tool:
+                mcp_info += f"Tool: {message.tool}\n"
+            if message.arguments:
+                import json
+                mcp_info += f"Arguments: {json.dumps(message.arguments, indent=2, ensure_ascii=False)}\n"
+            mcp_info += "```\n"
+            display_content += f"\n{mcp_info}"
+
+        # Determine border style - change User to Assistant style if has MCP info
+        border_style = message.role
+        if message.role == "user" and (message.server or message.tool):
+            role = f"[tool]Tool[tool]"
+            border_style = "tool"  # Use Assistant color for User with MCP info
+            model_info = f" {message.tool} @ {message.server}"  # Clear model info for User with MCP info
+
         self.console.print(Panel(
             Markdown(display_content),
             title=f"{index_str}{role} {timestamp}{model_info}",
-            border_style=message.role
+            border_style=border_style
         ))
 
     async def _collect_stream_content(self, response_stream, stream_buffer: StreamBuffer) -> Tuple[str, str]:

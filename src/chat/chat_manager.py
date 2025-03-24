@@ -86,7 +86,6 @@ class ChatManager:
     def get_user_confirmation(self, content: str) -> bool:
         """Get user confirmation before executing tool use"""
         self.display_manager.console.print("\n[yellow]Tool use detected in response:[/yellow]")
-        self.display_manager.console.print(content)
         while True:
             response = input("\nWould you like to proceed with tool execution? (y/n): ").strip().lower()
             if response in ['y', 'yes']:
@@ -118,6 +117,16 @@ class ChatManager:
         # Handle response with tool use
         plain_content, tool_content = split_content(content)
 
+        # Extract MCP tool info before updating content
+        mcp_tool = self.mcp_manager.extract_mcp_tool_use(tool_content)
+        if not mcp_tool:
+            return
+        server_name, tool_name, arguments = mcp_tool
+        # Add server, tool, and arguments info to assistant message
+        assistant_message.server = server_name
+        assistant_message.tool = tool_name
+        assistant_message.arguments = arguments
+
         # Update last assistant message with plain content
         assistant_message.content = plain_content
         self.messages.append(assistant_message)
@@ -132,16 +141,10 @@ class ChatManager:
             return
 
         # Execute tool and get results
-        mcp_tool = self.mcp_manager.extract_mcp_tool_use(tool_content)
-        if mcp_tool:
-            server_name, tool_name, arguments = mcp_tool
-            tool_results = await self.mcp_manager.execute_tool(server_name, tool_name, arguments)
-        else:
-            tool_results = "Tool execution not supported for this response."
-            return
+        tool_results = await self.mcp_manager.execute_tool(server_name, tool_name, arguments)
 
-        # Add tool results as user message
-        user_message = create_message("user", tool_results)
+        # Create user message with tool results and include tool info
+        user_message = create_message("user", tool_results, server=server_name, tool=tool_name, arguments=arguments)
 
         # Process user message and assistant response recursively
         await self.process_user_message(user_message)
