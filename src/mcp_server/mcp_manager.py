@@ -14,7 +14,7 @@ class MCPManager:
         self.sessions: Dict[str, ClientSession] = {}
         self.console = console
 
-    async def connect_to_server(self, server_name: str, exit_stack: AsyncExitStack):
+    async def connect_to_stdio_server(self, server_name: str, exit_stack: AsyncExitStack):
         """Connect to an MCP server using configuration from service"""
         try:
             server_config = mcp_service.get_config(server_name)
@@ -47,14 +47,14 @@ class MCPManager:
                 import traceback
                 self.console.print(f"[red]Detailed error:\n{''.join(traceback.format_tb(e.__traceback__))}[/red]")
 
-    async def connect_to_servers(self, servers: List[str], exit_stack: AsyncExitStack):
+    async def connect_to_stdio_servers(self, servers: List[str], exit_stack: AsyncExitStack):
         """Connect to specified MCP servers"""
         for server_name in servers:
             if server_name == 'git':
                 self.console.print(f"[yellow]Skipping server '{server_name}'[/yellow]")
                 continue
 
-            await self.connect_to_server(server_name, exit_stack)
+            await self.connect_to_stdio_server(server_name, exit_stack)
             await asyncio.sleep(1)
 
     def extract_mcp_tool_use(self, content: str) -> Optional[Tuple[str, str, dict]]:

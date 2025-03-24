@@ -179,16 +179,16 @@ class ChatManager:
 
                 # Init basic system prompt
                 self.system_prompt = time_prompt
-                prompts = self.bot_config.prompts
-                for prompt in prompts:
-                    if prompt not in ["mcp"]:
-                        prompt_config = prompt_service.get_prompt(prompt)
-                        if prompt_config:
-                            self.system_prompt += prompt_config.content + "\n"
+                if self.bot_config.prompts:
+                    for prompt in self.bot_config.prompts:
+                        if prompt not in ["mcp"]:
+                            prompt_config = prompt_service.get_prompt(prompt)
+                            if prompt_config:
+                                self.system_prompt += prompt_config.content + "\n"
 
                 if self.bot_config.mcp_servers:
                     # Initialize MCP and system prompt if MCP server settings exist
-                    await self.mcp_manager.connect_to_servers(self.bot_config.mcp_servers, exit_stack)
+                    await self.mcp_manager.connect_to_stdio_servers(self.bot_config.mcp_servers, exit_stack)
                     self.system_prompt += await get_mcp_prompt(self.mcp_manager)
 
                 if self.verbose:
