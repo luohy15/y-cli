@@ -7,6 +7,7 @@ from cli.commands.chat.share import share
 from cli.commands.bot import bot_group
 from cli.commands.mcp import mcp_group
 from cli.commands.prompt import prompt_group
+from cli.commands.daemon import daemon_group
 from config import bot_service
 
 @click.group()
@@ -30,6 +31,7 @@ cli.add_command(share)
 cli.add_command(bot_group)
 cli.add_command(mcp_group)
 cli.add_command(prompt_group)
+cli.add_command(daemon_group)
 
 if __name__ == "__main__":
     cli()

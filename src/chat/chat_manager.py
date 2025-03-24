@@ -8,7 +8,6 @@ from .service import ChatService
 from cli.display_manager import DisplayManager
 from cli.input_manager import InputManager
 from mcp_server.mcp_manager import MCPManager
-from mcp_server.prompt import get_mcp_prompt
 from prompt.preset import time_prompt
 from util import generate_id
 from .utils.tool_utils import contains_tool_use, split_content
@@ -189,7 +188,7 @@ class ChatManager:
                 if self.bot_config.mcp_servers:
                     # Initialize MCP and system prompt if MCP server settings exist
                     await self.mcp_manager.connect_to_stdio_servers(self.bot_config.mcp_servers, exit_stack)
-                    self.system_prompt += await get_mcp_prompt(self.mcp_manager)
+                    self.system_prompt += await self.mcp_manager.get_mcp_prompt(self.bot_config.mcp_servers, prompt_service)
 
                 if self.verbose:
                     self.display_manager.display_help()
