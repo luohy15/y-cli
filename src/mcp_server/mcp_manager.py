@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple, Any
 from mcp import ClientSession
 from rich.console import Console
 from contextlib import AsyncExitStack
-from .daemon_client import MCPDaemonClient
+from daemon_client.main import MCPDaemonClient
 from loguru import logger
 
 class MCPManager:

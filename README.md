@@ -18,6 +18,8 @@ A tiny command-line interface chat application that brings AI conversations to y
   - Client support with multiple server configurations (stdio/SSE)
   - Persistent daemon
   - Custom prompt configurations
+- 🧐 Simple "Deep Research" mode by prompt configuration
+  - [Demo](https://cdn.luohy15.com/chat/660831.html)
 
 ## Demo
 

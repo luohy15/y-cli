@@ -3,7 +3,7 @@
 from typing import List, Optional
 from .models import PromptConfig
 from .repository import PromptRepository
-from .preset import mcp_prompt
+from .preset import mcp_prompt, deep_research_prompt
 
 class PromptService:
     """Service for managing prompt configurations.
@@ -33,10 +33,25 @@ class PromptService:
             description="mcp prompt"
         )
     
+    @property
+    def _deep_research_prompt(self) -> PromptConfig:
+        """Get the deep_research prompt configuration.
+        
+        Returns:
+            PromptConfig
+        """
+        return PromptConfig(
+            name="deep-research",
+            content=deep_research_prompt,
+            description="deep research prompt"
+        )
+    
     def _ensure_default_prompt(self) -> None:
         """Ensure default prompt exists."""
         if not self.get_prompt("mcp"):
             self.add_prompt(self._mcp_prompt)
+        if not self.get_prompt("deep-research"):
+            self.add_prompt(self._deep_research_prompt)
     
     def list_prompts(self) -> List[PromptConfig]:
         """List all prompt configurations.

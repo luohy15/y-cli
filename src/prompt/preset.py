@@ -122,3 +122,37 @@ When a server is connected, you can use the server's tools via the `use_mcp_tool
 While MCP servers can provide additional tools and resources, they are not always required. You can still perform a wide range of tasks without connecting to an MCP server. However, when you need additional capabilities or access to specific resources, connecting to an MCP server can greatly enhance your functionality.
 
 """
+
+deep_research_prompt = """
+====
+
+DEEP RESEARCH
+
+For deep research tasks that require fetching content from multiple web pages, you can use the following two-phase approach:
+
+1. First, search for information using the search server(such as brave-searc, tavily, exa) to get a list of relevant URLs:
+<use_mcp_tool>
+<server_name>brave-search</server_name>
+<tool_name>brave_web_search</tool_name>
+<arguments>
+{
+  "query": "your search query here"
+}
+</arguments>
+</use_mcp_tool>
+
+2. Then, analyze the search results and select the most relevant URLs for detailed fetching, use server such as fetcher-mcp:
+<use_mcp_tool>
+<server_name>fetcher-mcp</server_name>
+<tool_name>fetch_urls</tool_name>
+<arguments>
+{
+  "search_results": "the search results from step 1",
+  "rationale": "explain why you're selecting these specific URLs",
+  "urls": ["url1", "url2", "url3", "url4", "url5"]
+}
+</arguments>
+</use_mcp_tool>
+
+The system will fetch these URLs concurrently and return their combined content, which you can then analyze to provide a comprehensive summary."
+"""

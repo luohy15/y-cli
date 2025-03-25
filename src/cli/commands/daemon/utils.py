@@ -7,7 +7,7 @@ from typing import Optional
 from rich.console import Console
 from rich.table import Table
 
-from mcp_server.daemon_client import MCPDaemonClient
+from daemon_client.main import MCPDaemonClient
 
 console = Console()
 

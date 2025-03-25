@@ -8,6 +8,7 @@ The MCP (Model Context Protocol) Daemon is a standalone background process that 
 - **Improved Performance**: Eliminates connection overhead for each new chat
 - **Consistent State**: Ensures MCP servers maintain consistent state across chats
 - **Resource Efficiency**: Reduces resource usage by sharing connections
+- **Concurrent Requests**: Supports multiple simultaneous client requests through connection pooling
 
 ## Usage
 
@@ -65,7 +66,47 @@ y-cli mcp daemon restart --foreground
 1. The daemon process starts and connects to all configured MCP servers
 2. It creates a Unix socket (or named pipe on Windows) for IPC communication
 3. Chat sessions connect to the daemon via this socket to execute MCP tools
-4. If the daemon is not running, chat sessions fall back to direct connections
+4. The daemon manages a connection pool to handle concurrent requests
+5. If the daemon is not running, chat sessions fall back to direct connections
+
+## Connection Pooling
+
+The daemon client supports concurrent requests through connection pooling:
+
+- **Default Pool Size**: 5 connections
+- **Configurable Pool Size**: Can be adjusted via constructor or environment variable
+- **Auto-Scaling**: Creates connections on demand up to the configured pool size
+- **Connection Reuse**: Efficiently reuses connections for better performance
+
+### Configuring Pool Size
+
+You can configure the connection pool size in two ways:
+
+1. **Environment Variable**:
+   ```bash
+   # Set pool size to 10
+   export Y_CLI_MCP_DAEMON_POOL_SIZE=10
+   ```
+
+2. **Programmatically** (when using the client in code):
+   ```python
+   from mcp_server.daemon_client import MCPDaemonClient
+   
+   # Create client with custom pool size
+   client = MCPDaemonClient(pool_size=10)
+   ```
+
+### Testing Concurrent Requests
+
+A test script is provided to verify that the connection pool properly handles concurrent requests:
+
+```bash
+# Run with default settings (10 requests, pool size 5)
+python build/test_concurrent_daemon.py
+
+# Run with custom parameters: 20 requests, pool size 8
+python build/test_concurrent_daemon.py 20 8
+```
 
 ## File Locations
 
@@ -92,3 +133,11 @@ y-cli mcp daemon restart --foreground
 - Check the daemon log for connection errors
 - Verify the MCP server configurations are correct
 - Try restarting the daemon with `y-cli mcp daemon restart`
+
+### Concurrent Request Errors
+
+- If you see "readuntil() called while another coroutine is already waiting for incoming data" errors:
+  - This indicates multiple requests are trying to use the same connection
+  - Verify that your client is using the latest version with connection pooling
+  - Try setting a larger pool size via the `Y_CLI_MCP_DAEMON_POOL_SIZE` environment variable
+  - Check if your code is properly releasing connections back to the pool
