@@ -77,8 +77,8 @@ Y-CLI comes with a pre-configured MCP prompt that provides instructions for usin
 
 Prompt configurations are stored in a JSONL file at:
 
-- On macOS: `~/Library/Preferences/y-cli/prompts.jsonl`
-- On Linux: `~/.config/y-cli/prompts.jsonl`
+- On macOS: `~/Library/Preferences/y-cli/prompt_config.jsonl`
+- On Linux: `~/.config/y-cli/prompt_config.jsonl`
 
 You can edit this file directly with a text editor if you prefer manual configuration over using the CLI commands.
 
