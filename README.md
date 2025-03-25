@@ -21,8 +21,11 @@ A tiny command-line interface chat application that brings AI conversations to y
 
 ## Demo
 
-### Interactive chat
-![interactive-chat](.github/visuals/interactive-chat.png)
+![demo](.github/visuals/demo.png)
+
+![demo](.github/visuals/demo.gif)
+
+[asciicast](https://asciinema.org/a/709735)
 
 ### Multiple bot configurations
 ```
@@ -32,15 +35,9 @@ Name         API Key      API Type    Base URL                             Model
 default      sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  google/gemini-2.0-flash-001          None            N/A            Yes                  No             N/A
 claude       sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  anthropic/claude-3.7-sonnet:beta     None             N/A            Yes                  todo           N/A
 o3-mini      sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  openai/o3-mini                       None             N/A            Yes                  No             low
-ds-r1        sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  deepseek/deepseek-r1                 None            N/A            Yes                  tavily         N/A
+ds-chat        sk-or-v1...  N/A         https://gateway.ai.cloudflare.co...  deepseek/deepseek-chat-v3-0324:free                 None            N/A            Yes                  tavily         N/A
 dify-bot     app-2drF...  dify        https://api.dify.ai/v1                                                    None             N/A            No                   No             N/A
 ```
-
-### Reasoning model & MCP client
-
-![demo](.github/visuals/demo.gif)
-
-[asciicast](https://asciinema.org/a/703255)
 
 ### Multiple MCP servers
 ```
@@ -60,9 +57,6 @@ Required:
 1. uv
 2. OpenRouter API key
 
-Optional:
-1. Cloudflare account (for cloud storage)
-
 Setup Instructions:
 1. **uv**
    - Follow the [official installation guide](https://docs.astral.sh/uv/getting-started/installation/)
@@ -72,11 +66,6 @@ Setup Instructions:
    - Visit [OpenRouter Settings](https://openrouter.ai/settings/keys)
    - Create a new API key
    - Save it for the initialization step
-
-3. **Cloudflare setup (optional)**
-   - Create a Cloudflare account if you don't have one
-   - Set up KV namespace and R2 bucket
-   - Check `docs/CLOUDFLARE_STORAGE.md` for detailed instructions
 
 ### Run without Installation
 ```bash
