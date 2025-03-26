@@ -2,6 +2,8 @@
 
 A tiny command-line interface chat application that brings AI conversations to your terminal.
 
+Check out [y-gui](https://github.com/luohy15/y-gui) for a web-based version of y-cli.
+
 ## ✨ Features
 
 - 📝 Flexible storage options:
