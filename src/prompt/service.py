@@ -3,7 +3,8 @@
 from typing import List, Optional
 from .models import PromptConfig
 from .repository import PromptRepository
-from .preset import mcp_prompt, deep_research_prompt
+from .mcp import mcp_prompt
+from .preset import deep_research_prompt
 
 class PromptService:
     """Service for managing prompt configurations.
