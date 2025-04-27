@@ -122,3 +122,7 @@ y-cli [OPTIONS] COMMAND [ARGS]...
 
 ### Options
 - `--help`  Show help message and exit
+
+## 📚 Documentation
+
+Visit the [deepwiki page](https://deepwiki.com/luohy15/y-cli) for comprehensive project documentation and guides.
