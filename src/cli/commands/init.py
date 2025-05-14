@@ -50,8 +50,6 @@ def init():
 
     Creates a config file then prompts for required settings.
     """
-    # print the version
-    click.echo(f"y-cli version: 0.3.11")
 
     # Get existing default config or create new one
     default_config = bot_service.get_config()

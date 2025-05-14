@@ -79,7 +79,7 @@ class TopiaOrchProvider(BaseProvider, DisplayManagerMixin):
             "Content-Type": "application/json; charset=utf-8",
         }
 
-    def _prepare_request_body(self, messages: List[Message], chat: Optional[Chat] = None) -> Dict[str, Any]:
+    def _prepare_request_body(self, messages: List[Message], chat_id: str, chat: Optional[Chat] = None) -> Dict[str, Any]:
         """Prepare request body for Topia API."""
         # Get the last user message as content
         user_messages = [msg for msg in messages if msg.role == "user"]
@@ -90,7 +90,7 @@ class TopiaOrchProvider(BaseProvider, DisplayManagerMixin):
         content = last_user_msg.content if isinstance(last_user_msg.content, str) else " ".join(part.text for part in last_user_msg.content)
 
         # Use chat ID as appUserId if available, otherwise use a default
-        app_user_id = chat.id
+        app_user_id = chat_id
 
         body = {
             "appUserId": app_user_id,
@@ -101,7 +101,7 @@ class TopiaOrchProvider(BaseProvider, DisplayManagerMixin):
 
         return body
 
-    async def call_chat_completions(self, messages: List[Message], chat: Optional[Chat] = None, system_prompt: Optional[str] = None) -> Tuple[Message, Optional[str]]:
+    async def call_chat_completions(self, messages: List[Message], chat_id: str, chat: Optional[Chat] = None, system_prompt: Optional[str] = None) -> Tuple[Message, Optional[str]]:
         """Get a chat response from Topia.
 
         Args:
@@ -121,7 +121,7 @@ class TopiaOrchProvider(BaseProvider, DisplayManagerMixin):
 
         try:
             headers = await self._prepare_headers()
-            body = self._prepare_request_body(messages, chat)
+            body = self._prepare_request_body(messages, chat_id, chat)
 
             async with httpx.AsyncClient(
                 base_url=self.base_url,

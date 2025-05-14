@@ -115,7 +115,7 @@ class ChatManager:
         self.messages.append(user_message)
         self.display_manager.display_message_panel(user_message, index=len(self.messages) - 1)
 
-        assistant_message, external_id = await self.provider.call_chat_completions(self.messages, self.current_chat, self.system_prompt)
+        assistant_message, external_id = await self.provider.call_chat_completions(self.messages, self.chat_id, self.current_chat, self.system_prompt)
         if external_id:
             self.external_id = external_id
         await self.process_assistant_message(assistant_message)
@@ -181,10 +181,6 @@ class ChatManager:
             try:
                 if self.verbose:
                     logger.info("Starting chat session...")
-                # if cloudflare repository, sync
-                storage_type = config.get('storage_type', 'file')
-                if storage_type == 'cloudflare':
-                    await self.service.repository._sync_from_r2_if_needed()
                 # Load chat if chat_id was provided and not already loaded
                 if self.continue_exist:
                     await self._load_chat(self.chat_id)

@@ -73,7 +73,7 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
 
         return prepared_messages
 
-    async def call_chat_completions(self, messages: List[Message], chat: Optional[Chat] = None, system_prompt: Optional[str] = None) -> Tuple[Message, Optional[str]]:
+    async def call_chat_completions(self, messages: List[Message], chat_id: str, chat: Optional[Chat] = None, system_prompt: Optional[str] = None) -> Tuple[Message, Optional[str]]:
         """Get a streaming chat response from OpenRouter.
 
         Args:
