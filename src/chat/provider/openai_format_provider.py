@@ -125,9 +125,10 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
                     # Store provider and model info from first response chunk
                     provider = None
                     model = None
+                    links = None
 
                     async def generate_chunks():
-                        nonlocal provider, model
+                        nonlocal provider, model, links
                         async for chunk in response.aiter_lines():
                             if chunk.startswith("data: "):
                                 try:
@@ -137,6 +138,15 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
                                         provider = data["provider"]
                                     if model is None and data.get("model"):
                                         model = data["model"]
+                                    
+                                    # Extract Perplexity-specific links from response
+                                    if links is None and provider and "perplexity" in provider.lower():
+                                        if data.get("links"):
+                                            links = data["links"]
+                                        elif data.get("citations"):
+                                            links = data["citations"]
+                                        elif data.get("references"):
+                                            links = data["references"]
 
                                     if data.get("choices"):
                                         delta = data["choices"][0].get("delta", {})
@@ -161,7 +171,8 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
                         reasoning_content=reasoning_content_full,
                         provider=provider if provider is not None else self.bot_config.name,
                         model=model,
-                        reasoning_effort=self.bot_config.reasoning_effort if self.bot_config.reasoning_effort else None
+                        reasoning_effort=self.bot_config.reasoning_effort if self.bot_config.reasoning_effort else None,
+                        links=links
                     )
                     return assistant_message, None
 

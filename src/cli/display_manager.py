@@ -99,6 +99,20 @@ class DisplayManager:
             mcp_info += "```\n"
             display_content += f"\n{mcp_info}"
 
+        # Add Perplexity reference links if available
+        if message.role == "assistant" and message.links and message.provider and "perplexity" in message.provider.lower():
+            links_info = "\n\n**References:**\n"
+            for i, link in enumerate(message.links, 1):
+                if isinstance(link, dict):
+                    # Handle structured link objects
+                    title = link.get('title', link.get('url', f'Reference {i}'))
+                    url = link.get('url', link.get('link', ''))
+                    links_info += f"{i}. [{title}]({url})\n"
+                else:
+                    # Handle simple string URLs
+                    links_info += f"{i}. [{link}]({link})\n"
+            display_content += links_info
+
         # Determine border style - change User to Assistant style if has MCP info
         border_style = message.role
         if message.role == "user" and (message.server or message.tool):
