@@ -5,7 +5,8 @@ from typing import List, Dict, Optional, Union
 
 def create_message(role: str, content: str, reasoning_content: Optional[str] = None, provider: Optional[str] = None,
                    model: Optional[str] = None, id: Optional[str] = None, reasoning_effort: Optional[float] = None,
-                   server: Optional[str] = None, tool: Optional[str] = None, arguments: Optional[Dict[str, Union[str, int, float, bool, Dict, List]]] = None) -> Message:
+                   server: Optional[str] = None, tool: Optional[str] = None, arguments: Optional[Dict[str, Union[str, int, float, bool, Dict, List]]] = None,
+                   links: Optional[List[str]] = None) -> Message:
     """Create a Message object with optional fields.
     
     Args:
@@ -16,6 +17,10 @@ def create_message(role: str, content: str, reasoning_content: Optional[str] = N
         model: Optional model name
         id: Optional message ID
         reasoning_effort: Optional reasoning effort value
+        server: Optional server name
+        tool: Optional tool name
+        arguments: Optional tool arguments
+        links: Optional list of reference links
         
     Returns:
         Message: Message object with role, content, and optional fields
@@ -50,5 +55,8 @@ def create_message(role: str, content: str, reasoning_content: Optional[str] = N
 
     if arguments is not None:
         message_data["arguments"] = arguments
+
+    if links is not None:
+        message_data["links"] = links
 
     return Message.from_dict(message_data)

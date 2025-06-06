@@ -4,7 +4,7 @@ import asyncio
 import argparse
 from typing import Optional
 
-from mcp_daemon.server import MCPDaemonServer
+from server import MCPDaemonServer
 
 async def run_daemon(socket_path: str, log_file: Optional[str] = None):
     """Run the MCP daemon server"""
