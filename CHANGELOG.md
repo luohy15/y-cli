@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-06-09
+
+### Added
+- Cloudflare D1 storage integration as a new storage_type option
+- Chat import command for migrating between storage types
+- Enhanced Message model with parent_id field for message relationships
+- Enhanced Chat model with new fields for content tracking and message selection
+- Documentation for Cloudflare D1 setup and usage
+
+### Changed
+- Replaced Cloudflare KV/R2 storage with more robust Cloudflare D1 database solution
+- Updated repository factory to support D1 database
+- Refactored chat service HTML generation for better TOC integration
+- Improved list_chats to support more advanced filtering options
+
+### Removed
+- Cloudflare Worker backup functionality (replaced by D1's built-in reliability)
+- Legacy Cloudflare KV/R2 storage implementation
+
 ## [0.3.13] - 2025-03-25
 
 ### Added

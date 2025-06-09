@@ -8,7 +8,7 @@ Check out [y-gui](https://github.com/luohy15/y-gui) for a web-based version of y
 
 - 📝 Flexible storage options:
   - Local JSONL files for easy access and sync
-  - Cloudflare KV and R2 for cloud storage and backup
+  - Cloudflare D1 for cloud storage
 - 💬 Interactive chat interface with tool execution visualization
 - 🤖 Support for multiple bot configurations (any base_url/api_key/model combination). Supported api format type:
   - [OpenAI chat completion streaming format](https://platform.openai.com/docs/api-reference/chat/streaming)
@@ -101,6 +101,7 @@ y-cli [OPTIONS] COMMAND [ARGS]...
 - `chat`   Start a new chat conversation or continue an existing one
 - `list`   List chat conversations with optional filtering
 - `share`  Share a chat conversation by generating a shareable link
+- `import` Import chats from an external file (useful for storage migration)
 - `bot`    Manage bot configurations:
   - `add`     Add a new bot configuration
   - `list`    List all configured bots
