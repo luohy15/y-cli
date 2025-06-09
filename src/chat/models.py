@@ -21,6 +21,7 @@ class Message:
     model: Optional[str] = None
     provider: Optional[str] = None
     id: Optional[str] = None
+    parent_id: Optional[str] = None
     server: Optional[str] = None
     tool: Optional[str] = None
     arguments: Optional[Dict[str, Union[str, int, float, bool, Dict, List]]] = None
@@ -52,6 +53,7 @@ class Message:
             images=data.get('images'),
             model=data.get('model'),
             id=data.get('id'),
+            parent_id=data.get('parent_id'),
             server=data.get('server'),
             tool=data.get('tool'),
             arguments=data.get('arguments')
@@ -76,6 +78,8 @@ class Message:
             result['reasoning_effort'] = self.reasoning_effort
         if self.id is not None:
             result['id'] = self.id
+        if self.parent_id is not None:
+            result['parent_id'] = self.parent_id
         if self.links is not None:
             result['links'] = self.links
         if self.images is not None:
@@ -99,6 +103,10 @@ class Chat:
     update_time: str
     messages: List[Message]
     external_id: Optional[str] = None
+    content_hash: Optional[str] = None
+    origin_chat_id: Optional[str] = None
+    origin_message_id: Optional[str] = None
+    selected_message_id: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: Dict) -> 'Chat':
@@ -110,7 +118,11 @@ class Chat:
                 [Message.from_dict(m) for m in data['messages'] if m['role'] != 'system'],
                 key=lambda x: (x.unix_timestamp)
             ),
-            external_id=data.get('external_id')
+            external_id=data.get('external_id'),
+            content_hash=data.get('content_hash'),
+            origin_chat_id=data.get('origin_chat_id'),
+            origin_message_id=data.get('origin_message_id'),
+            selected_message_id=data.get('selected_message_id')
         )
 
     def to_dict(self) -> Dict:
@@ -122,6 +134,14 @@ class Chat:
         }
         if self.external_id is not None:
             result['external_id'] = self.external_id
+        if self.content_hash is not None:
+            result['content_hash'] = self.content_hash
+        if self.origin_chat_id is not None:
+            result['origin_chat_id'] = self.origin_chat_id
+        if self.origin_message_id is not None:
+            result['origin_message_id'] = self.origin_message_id
+        if self.selected_message_id is not None:
+            result['selected_message_id'] = self.selected_message_id
         return result
 
     def update_messages(self, messages: List[Message]) -> None:

@@ -17,7 +17,7 @@ def get_default_config():
         
     return {
         # Storage configuration
-        "storage_type": "file",  # Options: "file" or "cloudflare"
+        "storage_type": "file",  # Options: "file" or "cloudflare_d1"
         
         # File storage paths
         "chat_file": f"{base_dir}/chat.jsonl",
@@ -29,11 +29,11 @@ def get_default_config():
         "tmp_dir": f"{cache_dir}/tmp",
         
         # Cloudflare configuration
-        "cloudflare": {
+        "cloudflare_d1": {
             "account_id": "",
+            "database_id": "",
             "api_token": "",
-            "kv_namespace_id": "",
-            "r2_bucket_name": ""
+            "user_prefix": "default"
         },
         
         # Other settings

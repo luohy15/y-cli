@@ -23,7 +23,7 @@ class ChatRepository(ABC):
             limit: Maximum number of chats to return (default: 10)
             
         Returns:
-            List[Chat]: Filtered list of chats
+            List[Chat] or Dict: Filtered list of chats or dictionary with chats
         """
         pass
     

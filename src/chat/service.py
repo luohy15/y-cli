@@ -173,15 +173,14 @@ class ChatService:
         # Complete TOC
         toc_content += '</ul>\n</div>\n'
         
-        # Combine TOC and content
-        md_content = toc_content + md_content
-
+        # Create a temporary file for content only (without TOC)
         # ensure tmp directory exists
         os.makedirs(config["tmp_dir"], exist_ok=True)
 
-        # Write markdown to temporary file
+        # Write markdown content to temporary file (without TOC)
         md_file = os.path.join(config["tmp_dir"], f"{chat_id}.md")
         html_file = os.path.join(config["tmp_dir"], f"{chat_id}.html")
+        temp_html = os.path.join(config["tmp_dir"], f"{chat_id}_temp.html")
 
         with open(md_file, "w", encoding="utf-8") as f:
             f.write(md_content)
@@ -326,15 +325,46 @@ pre {
         with open(css_file, "w", encoding="utf-8") as f:
             f.write(css)
 
-        # Run pandoc
+        # Run pandoc to convert content
         pandoc_cmd = 'pandoc'
         if IS_WINDOWS:
             pandoc_cmd = os.path.expanduser('~/AppData/Local/Pandoc/pandoc')
 
-        os.system(f'{pandoc_cmd} "{md_file}" -o "{html_file}" -s --metadata title="{chat_id}" --metadata charset="UTF-8" --include-in-header="{css_file}"')
+        os.system(f'{pandoc_cmd} "{md_file}" -o "{temp_html}" -s --metadata title="{chat_id}" --metadata charset="UTF-8" --include-in-header="{css_file}"')
 
+        # Now create the final HTML with proper structure
+        with open(temp_html, 'r', encoding='utf-8') as f:
+            pandoc_html = f.read()
+        
+        # Extract the body content from pandoc-generated HTML
+        import re
+        body_content = re.search(r'<body>(.*?)</body>', pandoc_html, re.DOTALL)
+        content_html = body_content.group(1) if body_content else pandoc_html
+        
+        # Create the final HTML with proper structure
+        final_html = f'''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{chat_id}</title>
+    {css}
+</head>
+<body>
+    {toc_content}
+    <div class="content-wrapper">
+        {content_html}
+    </div>
+</body>
+</html>
+'''
+        
+        # Write the final HTML to the output file
+        with open(html_file, 'w', encoding='utf-8') as f:
+            f.write(final_html)
+        
         # Clean up temporary files
         os.remove(css_file)
         os.remove(md_file)
+        os.remove(temp_html)
 
         return html_file
