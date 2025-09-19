@@ -18,6 +18,7 @@ from src.client_factory import get_client
 
 async def stop_tcp_daemon():
     """Stop the daemon running in TCP mode"""
+    pid_file = get_daemon_pid_file()
     try:
         # Create a TCP client
         client = get_client(use_tcp=True)
@@ -28,10 +29,16 @@ async def stop_tcp_daemon():
             console.print("[red]Could not connect to TCP daemon[/red]")
             return False
         
+        with open(pid_file, 'r') as f:
+            pid = int(f.read().strip())
+        
+        # Send SIGTERM to process
+        os.kill(pid, signal.SIGTERM)
+        console.print(f"[green]Sent SIGTERM to MCP daemon process with PID {pid}[/green]")
         # For now, we don't have a proper shutdown command
         # Just inform the user that the daemon is running
-        console.print("[yellow]TCP daemon is running, but cannot be stopped automatically.[/yellow]")
-        console.print("[yellow]Please manually terminate the process running the daemon.[/yellow]")
+        # console.print("[yellow]TCP daemon is running, but cannot be stopped automatically.[/yellow]")
+        # console.print("[yellow]Please manually terminate the process running the daemon.[/yellow]")
         
         # Disconnect
         await client.disconnect()
