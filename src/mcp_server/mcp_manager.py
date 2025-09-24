@@ -6,33 +6,37 @@ from typing import Dict, List, Optional, Tuple, Any
 from mcp import ClientSession
 from rich.console import Console
 from contextlib import AsyncExitStack
-from daemon_client.main import MCPDaemonClient
+from src.client_factory import get_client, is_daemon_running
 from loguru import logger
 
 class MCPManager:
-    def __init__(self, console: Console):
+    def __init__(self, console: Console, use_tcp: Optional[bool] = None):
         self.sessions: Dict[str, ClientSession] = {}
         self.console = console
-        self.client = MCPDaemonClient()
+        self.use_tcp = sys.platform == 'win32' if use_tcp is None else use_tcp
+        self.client = get_client(use_tcp=self.use_tcp)
         self.use_daemon = False  # Will be set after checking if daemon is running
         self.connected_to_daemon = False
 
     async def check_daemon_running(self) -> bool:
         """Check if the MCP daemon is running and we should use it"""
         try:
-            # Check if daemon is running
-            self.use_daemon = await MCPDaemonClient.is_daemon_running()
+            # Check if daemon is running using the appropriate method based on use_tcp
+            self.use_daemon = await is_daemon_running(use_tcp=self.use_tcp)
             if self.use_daemon:
                 # Connect to daemon
                 self.connected_to_daemon = await self.client.connect()
                 if self.connected_to_daemon:
-                    self.console.print("[green]Connected to MCP daemon[/green]")
+                    connection_type = "TCP/IP" if self.use_tcp else "Unix socket"
+                    self.console.print(f"[green]Connected to MCP daemon via {connection_type}[/green]")
                     return True
                 else:
-                    self.console.print("[yellow]MCP daemon is running but connection failed[/yellow]")
+                    connection_type = "TCP/IP" if self.use_tcp else "Unix socket"
+                    self.console.print(f"[yellow]MCP daemon is running but {connection_type} connection failed[/yellow]")
                     self.use_daemon = False
             else:
-                self.console.print("[yellow]MCP daemon is not running[/yellow]")
+                connection_type = "TCP/IP" if self.use_tcp else "Unix socket"
+                self.console.print(f"[yellow]MCP daemon is not running (checked via {connection_type})[/yellow]")
                 return False
         except Exception as e:
             logger.error(f"Error checking daemon status: {str(e)}")
