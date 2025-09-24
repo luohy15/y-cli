@@ -103,7 +103,7 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
             body["reasoning_effort"] = self.bot_config.reasoning_effort
         try:
             async with httpx.AsyncClient(
-                base_url=self.bot_config.base_url,
+                base_url=self.bot_config.base_url, verify=False
             ) as client:
                 async with client.stream(
                     "POST",
