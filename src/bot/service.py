@@ -1,7 +1,7 @@
 """Bot configuration service."""
 
 from typing import List, Optional
-from .models import BotConfig, DEFAULT_OPENROUTER_CONFIG, DEFAULT_MCP_SERVER_CONFIG
+from .models import BotConfig, DEFAULT_OPENROUTER_CONFIG
 from .repository import BotRepository
 
 class BotService:
@@ -39,8 +39,6 @@ class BotService:
         if config.name == "default":
             if config.openrouter_config is None:
                 config.openrouter_config = DEFAULT_OPENROUTER_CONFIG.copy()
-            if config.mcp_servers is None:
-                config.mcp_servers = DEFAULT_MCP_SERVER_CONFIG.copy()
         return self.repository.add_config(config)
 
     def delete_config(self, name: str) -> bool:

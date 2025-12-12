@@ -6,7 +6,6 @@ from typing import Optional
 from .repository.factory import get_chat_repository
 from cli.display_manager import DisplayManager
 from cli.input_manager import InputManager
-from mcp_server.mcp_manager import MCPManager
 from .provider.base_provider import BaseProvider
 from .provider.openai_format_provider import OpenAIFormatProvider
 from .provider.dify_provider import DifyProvider
@@ -34,7 +33,6 @@ class ChatApp:
         # Initialize managers
         display_manager = DisplayManager(bot_config)
         input_manager = InputManager(display_manager.console)
-        mcp_manager = MCPManager(display_manager.console)
         # Create provider based on api_type
         provider: BaseProvider
         if bot_config.api_type == "dify":
@@ -48,7 +46,6 @@ class ChatApp:
             repository=repository,
             display_manager=display_manager,
             input_manager=input_manager,
-            mcp_manager=mcp_manager,
             provider=provider,
             bot_config=bot_config,
             chat_id=chat_id,

@@ -9,8 +9,6 @@ DEFAULT_OPENROUTER_CONFIG = {
     }
 }
 
-DEFAULT_MCP_SERVER_CONFIG = ["todo"]
-
 @dataclass
 class BotConfig:
     name: str
@@ -22,7 +20,6 @@ class BotConfig:
     description: Optional[str] = None
     openrouter_config: Optional[Dict] = None
     prompts: Optional[List[str]] = None
-    mcp_servers: Optional[List[str]] = None
     max_tokens: Optional[int] = None
     custom_api_path: Optional[str] = None
     reasoning_effort: Optional[str] = None

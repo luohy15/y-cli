@@ -152,19 +152,6 @@ class ChatService:
 
             md_content += f"{section_content}\n\n"
             
-            # Add MCP server/tool info if available
-            if msg.role == 'assistant' and (msg.server or msg.tool):
-                mcp_info = "```\n"
-                if msg.server:
-                    mcp_info += f"Server: {msg.server}\n"
-                if msg.tool:
-                    mcp_info += f"Tool: {msg.tool}\n"
-                if msg.arguments:
-                    import json
-                    mcp_info += f"Arguments: {json.dumps(msg.arguments, indent=2, ensure_ascii=False)}\n"
-                mcp_info += "```\n"
-                md_content += f"{mcp_info}\n"
-            
             md_content += f"*{msg.timestamp}*\n\n---\n\n"
         
         # Close content wrapper div

@@ -86,19 +86,6 @@ class DisplayManager:
             display_content = f"```markdown\n{message.reasoning_content}\n```\n"
         display_content += content
 
-        # Add MCP server/tool info if available
-        if message.role == "assistant" and (message.server or message.tool):
-            mcp_info = "```\n"
-            if message.server:
-                mcp_info += f"Server: {message.server}\n"
-            if message.tool:
-                mcp_info += f"Tool: {message.tool}\n"
-            if message.arguments:
-                import json
-                mcp_info += f"Arguments: {json.dumps(message.arguments, indent=2, ensure_ascii=False)}\n"
-            mcp_info += "```\n"
-            display_content += f"\n{mcp_info}"
-
         # Add Perplexity reference links if available
         if message.role == "assistant" and message.links and message.provider and "perplexity" in message.provider.lower():
             links_info = "\n\n**References:**\n"
@@ -113,12 +100,7 @@ class DisplayManager:
                     links_info += f"{i}. [{link}]({link})\n"
             display_content += links_info
 
-        # Determine border style - change User to Assistant style if has MCP info
         border_style = message.role
-        if message.role == "user" and (message.server or message.tool):
-            role = f"[tool]Tool[tool]"
-            border_style = "tool"  # Use Assistant color for User with MCP info
-            model_info = f" {message.tool} @ {message.server}"  # Clear model info for User with MCP info
 
         self.console.print(Panel(
             Markdown(display_content),
