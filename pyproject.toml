@@ -13,9 +13,9 @@ dependencies = [
     "wcwidth>=0.2.13",
     "rich>=13.9.4",
     "pyperclip>=1.9.0",
-    "mcp>=1.2.1",
     "aiofiles>=24.1.0",
     "loguru>=0.7.3",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.scripts]

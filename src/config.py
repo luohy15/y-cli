@@ -17,7 +17,7 @@ def get_default_config():
     return {
         # Storage configuration
         "storage_type": "file",  # Options: "file" or "cloudflare_d1"
-        
+
         # File storage paths
         "chat_file": f"{base_dir}/chat.jsonl",
         "bot_config_file": f"{base_dir}/bot_config.jsonl",
@@ -25,7 +25,7 @@ def get_default_config():
         "openrouter_import_dir": f"{base_dir}/openrouter_import",
         "openrouter_import_history": f"{base_dir}/openrouter_import_history.jsonl",
         "tmp_dir": f"{cache_dir}/tmp",
-        
+
         # Cloudflare configuration
         "cloudflare_d1": {
             "account_id": "",
@@ -33,12 +33,13 @@ def get_default_config():
             "api_token": "",
             "user_prefix": "default"
         },
-        
+
         # Other settings
         "s3_bucket": "",
         "cloudfront_distribution_id": "",
         "proxy_host": "",
-        "proxy_port": ""
+        "proxy_port": "",
+        "print_speed": 1000
     }
 
 def load_config():

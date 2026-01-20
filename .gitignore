@@ -1,3 +1,5 @@
+.env
+dev_docs
 wrangler.toml
 
 # Python-generated files

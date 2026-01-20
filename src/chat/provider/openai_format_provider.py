@@ -1,7 +1,8 @@
-from typing import List, Dict, Optional, AsyncGenerator, Tuple
+from typing import List, Dict, Optional, Tuple
 from .base_provider import BaseProvider
 from .display_manager_mixin import DisplayManagerMixin
 import json
+from loguru import logger
 from types import SimpleNamespace
 import httpx
 from chat.models import Message, Chat
@@ -73,12 +74,20 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
 
         return prepared_messages
 
-    async def call_chat_completions(self, messages: List[Message], chat: Optional[Chat] = None, system_prompt: Optional[str] = None) -> Tuple[Message, Optional[str]]:
-        """Get a streaming chat response from OpenRouter.
+    async def call_chat_completions(
+        self,
+        messages: List[Message],
+        chat: Optional[Chat] = None,
+        system_prompt: Optional[str] = None,
+        **kwargs
+    ) -> Tuple[Message, Optional[str]]:
+        """Get a streaming chat response from OpenRouter with smart routing.
 
         Args:
             messages: List of Message objects
+            chat: Optional chat object
             system_prompt: Optional system prompt to add at the start
+            **kwargs: Additional arguments including decision (RoutingDecision)
 
         Returns:
             Message: The assistant's response message
@@ -86,21 +95,35 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
         Raises:
             Exception: If API call fails
         """
+        # Extract decision from kwargs
+        decision = kwargs.get('decision', None)
+
+        # Determine model name based on routing decision
+        model_name = self.bot_config.model
+        if decision and decision.use_web_search:
+            model_name = f"{model_name}:online"
+
         # Prepare messages with cache_control and system message
         prepared_messages = self.prepare_messages_for_completion(messages, system_prompt)
         body = {
-            "model": self.bot_config.model,
+            "model": model_name,  # May include :online suffix
             "messages": prepared_messages,
             "stream": True
         }
+
+        # Add reasoning parameter if think mode (from routing decision)
+        if decision and decision.use_think_model:
+            body["reasoning"] = {
+                "enabled": True,
+                "effort": decision.reasoning_effort
+            }
+
         if "deepseek-r1" in self.bot_config.model:
             body["include_reasoning"] = True
         if self.bot_config.openrouter_config and "provider" in self.bot_config.openrouter_config:
             body["provider"] = self.bot_config.openrouter_config["provider"]
         if self.bot_config.max_tokens:
             body["max_tokens"] = self.bot_config.max_tokens
-        if self.bot_config.reasoning_effort:
-            body["reasoning_effort"] = self.bot_config.reasoning_effort
         try:
             async with httpx.AsyncClient(
                 base_url=self.bot_config.base_url,
@@ -125,7 +148,7 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
                     # Store provider and model info from first response chunk
                     provider = None
                     model = None
-                    links = None
+                    links = []
 
                     async def generate_chunks():
                         nonlocal provider, model, links
@@ -138,9 +161,9 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
                                         provider = data["provider"]
                                     if model is None and data.get("model"):
                                         model = data["model"]
-                                    
+
                                     # Extract Perplexity-specific links from response
-                                    if links is None and provider and "perplexity" in provider.lower():
+                                    if provider and "perplexity" in provider.lower():
                                         if data.get("links"):
                                             links = data["links"]
                                         elif data.get("citations"):
@@ -148,8 +171,24 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
                                         elif data.get("references"):
                                             links = data["references"]
 
+                                    # Extract URLs from OpenRouter annotations (standardized format)
                                     if data.get("choices"):
-                                        delta = data["choices"][0].get("delta", {})
+                                        choice = data["choices"][0]
+                                        delta = choice.get("delta", {})
+                                        # Check for annotations in the delta
+                                        if delta.get("annotations"):
+                                            # logger.info(f"Found annotations: {delta['annotations']}")
+                                            for annotation in delta["annotations"]:
+                                                if annotation.get("type") == "url_citation":
+                                                    url_citation = annotation.get("url_citation", {})
+                                                    url = url_citation.get("url")
+                                                    title = url_citation.get("title")
+                                                    # logger.info(f"Extracted URL citation: {url} (title: {title})")
+                                                    if url:
+                                                        # Use "title|url" format when both are available
+                                                        link_entry = f"{title}|{url}" if title else url
+                                                        if link_entry not in links:
+                                                            links.append(link_entry)
                                         content = delta.get("content")
                                         reasoning_content = delta.get("reasoning_content") if delta.get("reasoning_content") else delta.get("reasoning")
                                         if content is not None or reasoning_content is not None:
@@ -171,8 +210,8 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
                         reasoning_content=reasoning_content_full,
                         provider=provider if provider is not None else self.bot_config.name,
                         model=model,
-                        reasoning_effort=self.bot_config.reasoning_effort if self.bot_config.reasoning_effort else None,
-                        links=links
+                        reasoning_effort=decision.reasoning_effort if decision and decision.use_think_model else None,
+                        links=links if links else None
                     )
                     return assistant_message, None
 

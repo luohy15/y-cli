@@ -1,6 +1,7 @@
 from typing import List, Dict, Optional
 from contextlib import AsyncExitStack
 from types import SimpleNamespace
+import os
 
 from chat.models import Chat, Message
 from .repository import ChatRepository
@@ -15,6 +16,7 @@ from bot import BotConfig
 from config import prompt_service
 from config import config
 from loguru import logger
+from .intent_analyzer import IntentAnalyzer
 
 class ChatManager:
     def __init__(
@@ -49,6 +51,9 @@ class ChatManager:
         # Set up cross-manager references
         self.provider.set_display_manager(display_manager)
 
+        # Initialize intent analyzer for smart routing
+        self.analyzer = self._create_analyzer(bot_config)
+
         # Initialize chat state
         self.current_chat: Optional[Chat] = None
         self.external_id: Optional[str] = None
@@ -63,6 +68,25 @@ class ChatManager:
             self.continue_exist = True
         else:
             self.chat_id = generate_id()
+
+    def _create_analyzer(self, bot_config: BotConfig) -> Optional[IntentAnalyzer]:
+        """Create an intent analyzer if not already an analyzer bot.
+
+        Args:
+            bot_config: Bot configuration
+
+        Returns:
+            IntentAnalyzer instance or None if this is already an analyzer
+        """
+        if bot_config.name == "analyzer":
+            return None
+
+        analyzer_model = os.getenv('ANALYZER_MODEL', 'google/gemini-2.5-flash')
+        return IntentAnalyzer(
+            base_url=bot_config.base_url,
+            api_key=bot_config.api_key,
+            model=analyzer_model
+        )
 
     async def _load_chat(self, chat_id: str):
         """Load an existing chat by ID"""
@@ -81,7 +105,19 @@ class ChatManager:
         self.messages.append(user_message)
         self.display_manager.display_message_panel(user_message, index=len(self.messages) - 1)
 
-        assistant_message, external_id = await self.provider.call_chat_completions(self.messages, self.current_chat, self.system_prompt)
+        # Analyze intent for smart routing
+        decision = None
+        if self.analyzer:
+            decision = await self.analyzer.analyze(user_message.content)
+            if self.verbose:
+                logger.info(f"Intent analysis: {decision.reason}")
+
+        assistant_message, external_id = await self.provider.call_chat_completions(
+            self.messages,
+            self.current_chat,
+            self.system_prompt,
+            decision=decision
+        )
         if external_id:
             self.external_id = external_id
         await self.process_assistant_message(assistant_message)

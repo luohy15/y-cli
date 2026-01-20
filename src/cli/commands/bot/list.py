@@ -27,24 +27,22 @@ def bot_list(verbose: bool = False):
     
     # Define column width ratios (total should be < 1 to leave space for separators)
     width_ratios = {
-        "Name": 0.15,
-        "API Key": 0.1,
-        "API Type": 0.1,
-        "Base URL": 0.15,
-        "Model": 0.15,
-        "Print Speed": 0.08,
-        "Description": 0.15,
-        "OpenRouter Config": 0.1,
-        "Reasoning Effort": 0.05
+        "Name": 0.18,
+        "API Key": 0.12,
+        "API Type": 0.12,
+        "Base URL": 0.18,
+        "Model": 0.18,
+        "Description": 0.18,
+        "OpenRouter Config": 0.12
     }
-    
+
     # Calculate actual column widths
     term_width = shutil.get_terminal_size().columns
     col_widths = {k: max(10, int(term_width * ratio)) for k, ratio in width_ratios.items()}
-    
+
     # Prepare table data with truncated values
     table_data = []
-    headers = ["Name", "API Key", "API Type", "Base URL", "Model", "Print Speed", "Description", "OpenRouter Config", "Reasoning Effort"]
+    headers = ["Name", "API Key", "API Type", "Base URL", "Model", "Description", "OpenRouter Config"]
 
     for config in configs:
         table_data.append([
@@ -53,10 +51,8 @@ def bot_list(verbose: bool = False):
             truncate_text(config.api_type or "N/A", col_widths["API Type"]),
             truncate_text(config.base_url, col_widths["Base URL"]),
             truncate_text(config.model, col_widths["Model"]),
-            truncate_text(str(config.print_speed), col_widths["Print Speed"]),
             truncate_text(config.description or "N/A", col_widths["Description"]),
-            "Yes" if config.openrouter_config else "No",
-            truncate_text(config.reasoning_effort or "N/A", col_widths["Reasoning Effort"])
+            "Yes" if config.openrouter_config else "No"
         ])
     click.echo(tabulate(
         table_data,

@@ -26,12 +26,10 @@ def print_config_info():
     click.echo(f"\n{click.style('Optional settings that can be configured using `y-cli bot add`:', fg='green')}")
     click.echo(f"- {click.style('model:', fg='yellow')} The model to use for chat")
     click.echo(f"- {click.style('base_url:', fg='yellow')} OpenRouter API base URL")
-    click.echo(f"- {click.style('print_speed:', fg='yellow')} Speed of text printing")
     click.echo(f"- {click.style('description:', fg='yellow')} Bot configuration description")
     click.echo(f"- {click.style('openrouter_config:', fg='yellow')} OpenRouter configuration settings")
     click.echo(f"- {click.style('max_tokens:', fg='yellow')} Maximum number of tokens in response")
     click.echo(f"- {click.style('custom_api_path:', fg='yellow')} Custom path for chat completion API request")
-    click.echo(f"- {click.style('reasoning_effort:', fg='yellow')} Level of reasoning effort in responses")
 
     click.echo(f"\n{click.style(f'Proxy settings can be configured in {CONFIG_FILE}:', fg='magenta')}")
     click.echo(f"- {click.style('proxy_host/proxy_port:', fg='yellow')} Network proxy settings")

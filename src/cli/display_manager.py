@@ -51,7 +51,7 @@ class StreamBuffer:
 class DisplayManager:
     def __init__(self, bot_config: Optional[BotConfig] = None):
         self.console = Console(theme=custom_theme)
-        self.max_chars_per_second = bot_config.print_speed if bot_config and bot_config.print_speed else 1000
+        self.max_chars_per_second = config.get("print_speed", 1000)
 
     def display_message_panel(self, message: Message, index: Optional[int] = None):
         """Display a message in a panel with role-colored borders.
