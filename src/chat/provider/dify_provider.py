@@ -4,8 +4,7 @@ from .display_manager_mixin import DisplayManagerMixin
 import json
 from types import SimpleNamespace
 import httpx
-from chat.models import Message, Chat
-from bot.models import BotConfig
+from entity.dto import Message, Chat, BotConfig
 from ..utils.message_utils import create_message
 
 class DifyProvider(BaseProvider, DisplayManagerMixin):
@@ -131,6 +130,32 @@ class DifyProvider(BaseProvider, DisplayManagerMixin):
                         model=self.bot_config.model
                     ), conversation_id
 
+        except httpx.HTTPError as e:
+            raise Exception(f"HTTP error getting chat response: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Error calling Dify API: {str(e)}")
+
+    async def call_chat_completions_non_stream(
+        self,
+        messages: List[Message],
+        system_prompt: Optional[str] = None,
+    ) -> str:
+        """Get a non-streaming chat response from Dify."""
+        headers = self._prepare_headers()
+        body = self._prepare_request_body(messages)
+        body["response_mode"] = "blocking"
+
+        try:
+            async with httpx.AsyncClient(base_url=self.bot_config.base_url) as client:
+                response = await client.post(
+                    self.chat_endpoint,
+                    headers=headers,
+                    json=body,
+                    timeout=60.0,
+                )
+                response.raise_for_status()
+                data = response.json()
+                return data.get("answer", "")
         except httpx.HTTPError as e:
             raise Exception(f"HTTP error getting chat response: {str(e)}")
         except Exception as e:

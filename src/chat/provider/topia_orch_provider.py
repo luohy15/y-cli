@@ -6,8 +6,7 @@ import os
 import time
 from types import SimpleNamespace
 import httpx
-from chat.models import Message, Chat
-from bot.models import BotConfig
+from entity.dto import Message, Chat, BotConfig
 from ..utils.message_utils import create_message
 from config import config
 
@@ -192,3 +191,11 @@ class TopiaOrchProvider(BaseProvider, DisplayManagerMixin):
             raise Exception(f"HTTP error getting chat response: {str(e)}")
         except Exception as e:
             raise Exception(f"Error calling Topia API: {str(e)}")
+
+    async def call_chat_completions_non_stream(
+        self,
+        messages: List[Message],
+        system_prompt: Optional[str] = None,
+    ) -> str:
+        """Get a non-streaming chat response from Topia."""
+        raise NotImplementedError("Non-streaming mode is not supported for Topia provider")

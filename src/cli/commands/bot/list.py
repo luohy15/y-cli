@@ -14,7 +14,7 @@ def truncate_text(text, max_length):
 def bot_list(verbose: bool = False):
     """List all bot configurations."""
     if verbose:
-        click.echo(f"{click.style('Bot config data will be stored in:', fg='green')}\n{click.style(config['bot_config_file'], fg='cyan')}")
+        click.echo(f"{click.style('Bot config stored in:', fg='green')}\n{click.style(config['sqlite_file'], fg='cyan')}")
 
     configs = bot_service.list_configs()
     

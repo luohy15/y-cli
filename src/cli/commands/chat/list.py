@@ -45,7 +45,7 @@ def list_chats(keyword: Optional[str], model: Optional[str], provider: Optional[
     """
     from config import config
     if verbose:
-        click.echo(f"{click.style('Chat data will be stored in:', fg='green')}\n{click.style(config['chat_file'], fg='cyan')}")
+        click.echo(f"{click.style('Chat data stored in:', fg='green')}\n{click.style(config['sqlite_file'], fg='cyan')}")
         if any([keyword, model, provider]):
             filters = []
             if keyword:
@@ -58,8 +58,11 @@ def list_chats(keyword: Optional[str], model: Optional[str], provider: Optional[
         click.echo(f"Result limit: {limit}")
     import asyncio
     
-    chat_app = ChatApp(bot_config=bot_service.get_config())
-    chats = asyncio.run(chat_app.chat_manager.service.list_chats(
+    from repository.chat_factory import get_chat_repository
+    from service import chat as chat_service
+    repository = get_chat_repository()
+    chats = asyncio.run(chat_service.list_chats(
+        repository,
         keyword=keyword,
         model=model,
         provider=provider,

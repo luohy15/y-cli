@@ -1,13 +1,10 @@
 import click
-from typing import Optional
-from bot import BotConfig
-from config import bot_service, config
+from entity.dto import BotConfig
+from config import bot_service
 
 @click.command('add')
 def bot_add():
     """Add a new bot configuration."""
-    # Tip about direct file editing
-    click.echo(f"TIP: For efficiency, you can directly edit the bot configuration file at: {config['bot_config_file']}")
     name = click.prompt("Bot name")
     
     # Check if bot already exists

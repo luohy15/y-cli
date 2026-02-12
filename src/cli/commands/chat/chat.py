@@ -15,7 +15,8 @@ from loguru import logger
 @click.option('--model', '-m', help='OpenRouter model to use')
 @click.option('--verbose', '-v', is_flag=True, help='Show detailed usage instructions')
 @click.option('--bot', '-b', help='Use specific bot name')
-def chat(chat_id: Optional[str], latest: bool, model: Optional[str], verbose: bool = False, bot: Optional[str] = None):
+@click.option('--prompt', '-p', help='Run a one-off query and exit')
+def chat(chat_id: Optional[str], latest: bool, model: Optional[str], verbose: bool = False, bot: Optional[str] = None, prompt: Optional[str] = None):
     """Start a new chat conversation or continue an existing one.
 
     Use --latest/-l to continue from your most recent chat.
@@ -32,23 +33,19 @@ def chat(chat_id: Optional[str], latest: bool, model: Optional[str], verbose: bo
     # Use command line model if specified, otherwise use bot config model
     bot_config.model = model or bot_config.model
 
-    # Create a single ChatApp instance for all operations
-    chat_app = ChatApp(bot_config=bot_config, verbose=verbose)
-
     # Handle --latest flag
     if latest:
-        chats = asyncio.run(chat_app.chat_manager.service.list_chats(limit=1))
+        from repository.chat_factory import get_chat_repository
+        from service import chat as chat_service
+        repository = get_chat_repository()
+        chats = asyncio.run(chat_service.list_chats(repository, limit=1))
         if not chats:
             click.echo("Error: No existing chats found")
             raise click.Abort()
         chat_id = chats[0].id
-        # Reinitialize ChatApp with the found chat_id
-        chat_app = ChatApp(bot_config=bot_config, chat_id=chat_id, verbose=verbose)
 
-    # Handle --chat-id flag
-    elif chat_id:
-        # Reinitialize ChatApp with the specified chat_id
-        chat_app = ChatApp(bot_config=bot_config, chat_id=chat_id, verbose=verbose)
+    # Create ChatApp instance
+    chat_app = ChatApp(bot_config=bot_config, chat_id=chat_id, verbose=verbose)
 
     if verbose:
         logger.info(f"Using OpenRouter API Base URL: {bot_config.base_url}")
@@ -59,4 +56,7 @@ def chat(chat_id: Optional[str], latest: bool, model: Optional[str], verbose: bo
         else:
             logger.info("Starting new chat")
 
-    asyncio.run(chat_app.chat())
+    if prompt:
+        asyncio.run(chat_app.one_off(prompt))
+    else:
+        asyncio.run(chat_app.chat())

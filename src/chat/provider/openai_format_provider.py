@@ -5,8 +5,7 @@ import json
 from loguru import logger
 from types import SimpleNamespace
 import httpx
-from chat.models import Message, Chat
-from bot.models import BotConfig
+from entity.dto import Message, Chat, BotConfig
 from ..utils.message_utils import create_message
 
 class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
@@ -215,6 +214,42 @@ class OpenAIFormatProvider(BaseProvider, DisplayManagerMixin):
                     )
                     return assistant_message, None
 
+        except httpx.HTTPError as e:
+            raise Exception(f"HTTP error getting chat response: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Error getting chat response: {str(e)}")
+
+    async def call_chat_completions_non_stream(
+        self,
+        messages: List[Message],
+        system_prompt: Optional[str] = None,
+    ) -> str:
+        """Get a non-streaming chat response, returning only the content text."""
+        prepared_messages = self.prepare_messages_for_completion(messages, system_prompt)
+        body = {
+            "model": self.bot_config.model,
+            "messages": prepared_messages,
+            "stream": False,
+        }
+        if self.bot_config.max_tokens:
+            body["max_tokens"] = self.bot_config.max_tokens
+
+        try:
+            async with httpx.AsyncClient(base_url=self.bot_config.base_url) as client:
+                response = await client.post(
+                    self.bot_config.custom_api_path if self.bot_config.custom_api_path else "/chat/completions",
+                    headers={
+                        "HTTP-Referer": "https://luohy15.com",
+                        "X-Title": "y-cli",
+                        "Authorization": f"Bearer {self.bot_config.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=body,
+                    timeout=60.0,
+                )
+                response.raise_for_status()
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
         except httpx.HTTPError as e:
             raise Exception(f"HTTP error getting chat response: {str(e)}")
         except Exception as e:

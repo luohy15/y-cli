@@ -2,9 +2,8 @@ import re
 import time
 import asyncio
 from typing import List, Tuple, Optional
-from chat.models import Message
+from entity.dto import Message, BotConfig
 from config import config
-from bot.models import BotConfig
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel

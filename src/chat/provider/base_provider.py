@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
-from chat.models import Message, Chat
+from entity.dto import Message, Chat
 
 class BaseProvider(ABC):
     @abstractmethod
@@ -25,5 +25,22 @@ class BaseProvider(ABC):
 
         Raises:
             Exception: If API call fails
+        """
+        pass
+
+    @abstractmethod
+    async def call_chat_completions_non_stream(
+        self,
+        messages: List[Message],
+        system_prompt: Optional[str] = None,
+    ) -> str:
+        """Get a non-streaming chat response, returning only the content text.
+
+        Args:
+            messages: List of Message objects
+            system_prompt: Optional system prompt to add at the start
+
+        Returns:
+            str: The assistant's response content
         """
         pass

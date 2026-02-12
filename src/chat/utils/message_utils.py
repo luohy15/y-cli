@@ -1,5 +1,5 @@
 from typing import Optional
-from chat.models import Message
+from entity.dto import Message
 from util import get_iso8601_timestamp, get_unix_timestamp
 from typing import List, Dict, Optional, Union
 

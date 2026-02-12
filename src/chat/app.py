@@ -3,7 +3,7 @@ import sys
 import asyncio
 from typing import Optional
 
-from .repository.factory import get_chat_repository
+from repository.chat_factory import get_chat_repository
 from cli.display_manager import DisplayManager
 from cli.input_manager import InputManager
 from .provider.base_provider import BaseProvider
@@ -11,7 +11,7 @@ from .provider.openai_format_provider import OpenAIFormatProvider
 from .provider.dify_provider import DifyProvider
 from .provider.topia_orch_provider import TopiaOrchProvider
 from .chat_manager import ChatManager
-from bot.models import BotConfig
+from entity.dto import BotConfig
 from config import bot_service
 
 class ChatApp:
@@ -55,6 +55,10 @@ class ChatApp:
     async def chat(self):
         """Start the chat session"""
         await self.chat_manager.run()
+
+    async def one_off(self, prompt: str):
+        """Send a one-off query and exit"""
+        await self.chat_manager.run_one_off(prompt)
 
 async def main():
     try:

@@ -14,7 +14,7 @@ def truncate_text(text, max_length):
 def prompt_list(verbose: bool = False):
     """List all prompt configurations."""
     if verbose:
-        click.echo(f"{click.style('Prompt config data will be stored in:', fg='green')}\n{click.style(config['prompt_config_file'], fg='cyan')}")
+        click.echo(f"{click.style('Prompt config stored in:', fg='green')}\n{click.style(config['sqlite_file'], fg='cyan')}")
 
     prompts = prompt_service.list_prompts()
     

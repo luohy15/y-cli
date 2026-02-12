@@ -1,7 +1,7 @@
 import os
 import click
-from config import config, CONFIG_FILE
-from bot import BotConfig
+from config import config
+from entity.dto import BotConfig
 from config import bot_service
 
 # Default model choices with index mapping and descriptions
@@ -18,11 +18,10 @@ MODEL_CHOICES = {
 
 def print_config_info():
     """Print configuration information and available settings."""
-    click.echo(f"\n{click.style('Configuration saved to:', fg='green')}\n{click.style(CONFIG_FILE, fg='cyan')}")
-    click.echo(f"{click.style('Chat data will be stored in:', fg='green')}\n{click.style(config['chat_file'], fg='cyan')}")
-    click.echo(f"{click.style('Bot config data will be stored in:', fg='green')}\n{click.style(config['bot_config_file'], fg='cyan')}")
-    click.echo(f"{click.style('Prompt config data will be stored in:', fg='green')}\n{click.style(config['prompt_config_file'], fg='cyan')}")
-    
+    home = os.environ.get("Y_CLI_HOME", "~/.y-cli")
+    click.echo(f"\n{click.style('Y_CLI_HOME:', fg='green')}\n{click.style(home, fg='cyan')}")
+    click.echo(f"{click.style('Data will be stored in:', fg='green')}\n{click.style(config['sqlite_file'], fg='cyan')}")
+
     click.echo(f"\n{click.style('Optional settings that can be configured using `y-cli bot add`:', fg='green')}")
     click.echo(f"- {click.style('model:', fg='yellow')} The model to use for chat")
     click.echo(f"- {click.style('base_url:', fg='yellow')} OpenRouter API base URL")
@@ -31,8 +30,8 @@ def print_config_info():
     click.echo(f"- {click.style('max_tokens:', fg='yellow')} Maximum number of tokens in response")
     click.echo(f"- {click.style('custom_api_path:', fg='yellow')} Custom path for chat completion API request")
 
-    click.echo(f"\n{click.style(f'Proxy settings can be configured in {CONFIG_FILE}:', fg='magenta')}")
-    click.echo(f"- {click.style('proxy_host/proxy_port:', fg='yellow')} Network proxy settings")
+    click.echo(f"\n{click.style('Proxy settings via env vars:', fg='magenta')}")
+    click.echo(f"- {click.style('Y_CLI_PROXY_HOST / Y_CLI_PROXY_PORT:', fg='yellow')} Network proxy settings")
 
 @click.command()
 def init():
@@ -43,7 +42,7 @@ def init():
 
     # Get existing default config or create new one
     default_config = bot_service.get_config()
-    
+
     # If already initialized with API key, skip to echo
     if default_config and default_config.api_key:
         print_config_info()
@@ -68,7 +67,7 @@ def init():
         type=click.Choice(["1", "2"]),
         default="1"
     )
-    
+
     # Get the selected model name
     model = MODEL_CHOICES[model_idx]["name"]
 

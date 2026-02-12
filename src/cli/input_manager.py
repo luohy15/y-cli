@@ -3,7 +3,7 @@ import pyperclip
 from typing import List, Optional, Tuple
 from prompt_toolkit import prompt
 from rich.console import Console
-from chat.models import Message
+from entity.dto import Message
 
 class InputManager:
     def __init__(self, console: Console):

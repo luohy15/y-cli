@@ -1,7 +1,54 @@
+"""Data Transfer Objects (dataclass DTOs) for bot, prompt, and chat domains."""
+
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Optional, Union, Iterable
+from typing import Dict, List, Optional, Union, Iterable
 from datetime import datetime
 from util import get_iso8601_timestamp
+
+# ── Bot ──
+
+DEFAULT_OPENROUTER_CONFIG = {
+    "provider": {
+        "sort": "throughput"
+    }
+}
+
+@dataclass
+class BotConfig:
+    name: str
+    base_url: str = "https://openrouter.ai/api/v1"
+    api_key: str = ""
+    api_type: Optional[str] = None
+    model: str = ""
+    description: Optional[str] = None
+    openrouter_config: Optional[Dict] = None
+    prompts: Optional[List[str]] = None
+    max_tokens: Optional[int] = None
+    custom_api_path: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'BotConfig':
+        return cls(**data)
+
+    def to_dict(self) -> Dict:
+        return {k: v for k, v in asdict(self).items() if v is not None}
+
+# ── Prompt ──
+
+@dataclass
+class PromptConfig:
+    name: str
+    content: str
+    description: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'PromptConfig':
+        return cls(**data)
+
+    def to_dict(self) -> Dict:
+        return {k: v for k, v in asdict(self).items() if v is not None}
+
+# ── Chat ──
 
 @dataclass
 class ContentPart:
@@ -28,22 +75,18 @@ class Message:
 
     @classmethod
     def from_dict(cls, data: Dict) -> 'Message':
-        # Get or generate unix_timestamp
         unix_timestamp = data.get('unix_timestamp')
         if unix_timestamp is None:
-            # Convert ISO timestamp to unix timestamp
             dt = datetime.strptime(data['timestamp'].split('+')[0], "%Y-%m-%dT%H:%M:%S")
             unix_timestamp = int(dt.timestamp() * 1000)
 
-        # Handle content which can be str or list of content parts
         content = data['content']
         if isinstance(content, list):
-            # Convert dict content parts to ContentPart objects
             content = [ContentPart(**part) if isinstance(part, dict) else part for part in content]
 
         return cls(
             role=data['role'],
-            content=content,  # Keep original structure (str or list)
+            content=content,
             reasoning_content=data.get('reasoning_content'),
             reasoning_effort=data.get('reasoning_effort'),
             timestamp=data['timestamp'],
@@ -60,7 +103,6 @@ class Message:
         )
 
     def to_dict(self) -> Dict:
-        # Filter out cache_control from content if it's a list of parts
         if isinstance(self.content, list):
             content = [{'type': part.type, 'text': part.text} for part in self.content]
         else:
@@ -145,7 +187,6 @@ class Chat:
         return result
 
     def update_messages(self, messages: List[Message]) -> None:
-        # Filter out system messages and sort the remaining ones by timestamp
         self.messages = sorted(
             [msg for msg in messages if msg.role != 'system'],
             key=lambda x: (x.unix_timestamp)
