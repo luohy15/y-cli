@@ -15,3 +15,11 @@ def generate_id() -> str:
     """Generate a unique ID (6 characters)"""
     import uuid
     return uuid.uuid4().hex[:6]
+
+def generate_message_id() -> str:
+    """Generate a unique message ID in format msg_{timestamp}_{random8chars}"""
+    import random
+    import string
+    chars = string.ascii_lowercase + string.digits
+    rand = ''.join(random.choices(chars, k=8))
+    return f"msg_{int(time.time() * 1000)}_{rand}"

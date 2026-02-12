@@ -2,22 +2,23 @@ import sys
 import os
 from typing import List, Optional
 from storage.entity.dto import Chat, Message
+from storage.repository import chat as chat_repo
+from storage.repository.chat import ChatSummary
 
 from storage.util import get_iso8601_timestamp, generate_id
 
 IS_WINDOWS = sys.platform == 'win32'
 
 
-async def list_chats(repository, keyword: Optional[str] = None, model: Optional[str] = None,
-               provider: Optional[str] = None, limit: int = 10) -> List[Chat]:
-    return await repository.list_chats(keyword=keyword, model=model, provider=provider, limit=limit)
+async def list_chats(limit: int = 10) -> List[ChatSummary]:
+    return await chat_repo.list_chats(limit=limit)
 
 
-async def get_chat(repository, chat_id: str) -> Optional[Chat]:
-    return await repository.get_chat(chat_id)
+async def get_chat(chat_id: str) -> Optional[Chat]:
+    return await chat_repo.get_chat(chat_id)
 
 
-async def create_chat(repository, messages: List[Message], external_id: Optional[str] = None, chat_id: Optional[str] = None) -> Chat:
+async def create_chat(messages: List[Message], external_id: Optional[str] = None, chat_id: Optional[str] = None) -> Chat:
     timestamp = get_iso8601_timestamp()
     chat = Chat(
         id=chat_id if chat_id else generate_id(),
@@ -26,26 +27,26 @@ async def create_chat(repository, messages: List[Message], external_id: Optional
         messages=[msg for msg in messages if msg.role != 'system'],
         external_id=external_id
     )
-    return await repository.add_chat(chat)
+    return await chat_repo.add_chat(chat)
 
 
-async def update_chat(repository, chat_id: str, messages: List[Message], external_id: Optional[str] = None) -> Chat:
-    chat = await get_chat(repository, chat_id)
+async def update_chat(chat_id: str, messages: List[Message], external_id: Optional[str] = None) -> Chat:
+    chat = await get_chat(chat_id)
     if not chat:
         raise ValueError(f"Chat with id {chat_id} not found")
     chat.update_messages(messages)
     chat.external_id = external_id
-    return await repository.update_chat(chat)
+    return await chat_repo.update_chat(chat)
 
 
-async def delete_chat(repository, chat_id: str) -> bool:
-    return await repository.delete_chat(chat_id)
+async def delete_chat(chat_id: str) -> bool:
+    return await chat_repo.delete_chat(chat_id)
 
 
-async def generate_share_html(repository, chat_id: str) -> str:
+async def generate_share_html(chat_id: str) -> str:
     home = os.path.expanduser(os.environ.get("Y_CLI_HOME", "~/.y-cli"))
     tmp_dir = os.path.join(home, "tmp")
-    chat = await get_chat(repository, chat_id)
+    chat = await get_chat(chat_id)
     if not chat:
         raise ValueError(f"Chat with id {chat_id} not found")
 

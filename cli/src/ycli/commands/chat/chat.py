@@ -35,13 +35,12 @@ def chat(chat_id: Optional[str], latest: bool, model: Optional[str], verbose: bo
 
     # Handle --latest flag
     if latest:
-        from storage.repository import chat as chat_repo
         from storage.service import chat as chat_service
-        chats = asyncio.run(chat_service.list_chats(chat_repo, limit=1))
+        chats = asyncio.run(chat_service.list_chats(limit=1))
         if not chats:
             click.echo("Error: No existing chats found")
             raise click.Abort()
-        chat_id = chats[0].id
+        chat_id = chats[0].chat_id
 
     # Create ChatApp instance
     chat_app = ChatApp(bot_config=bot_config, chat_id=chat_id, verbose=verbose)
@@ -55,7 +54,4 @@ def chat(chat_id: Optional[str], latest: bool, model: Optional[str], verbose: bo
         else:
             logger.info("Starting new chat")
 
-    if prompt:
-        asyncio.run(chat_app.one_off(prompt))
-    else:
-        asyncio.run(chat_app.chat())
+    asyncio.run(chat_app.run(prompt))

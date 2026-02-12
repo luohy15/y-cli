@@ -1,5 +1,5 @@
 [tool.uv.workspace]
-members = ["storage", "cli", "api", "worker", "admin"]
+members = ["storage", "cli", "api", "worker", "admin", "agent"]
 
 [tool.uv]
 dev-dependencies = []

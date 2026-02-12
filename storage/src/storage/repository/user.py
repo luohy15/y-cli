@@ -30,6 +30,5 @@ def list_users(session: Session) -> List[UserEntity]:
 
 def get_current_user_db_id(session: Session) -> int:
     """Resolve the configured string user_id to the integer user.id PK."""
-    user_id_str = os.environ.get("Y_CLI_USER_ID", "default")
-    user = get_or_create_user(session, user_id_str)
-    return user.id
+    user_id = int(os.environ.get("Y_CLI_USER_ID", get_or_create_user(session, "default")))
+    return user_id

@@ -9,6 +9,7 @@ description = "Personal command-line toolkit"
 requires-python = ">=3.10"
 dependencies = [
     "y-cli-storage",
+    "y-cli-agent",
     "click>=8.1.0",
     "prompt-toolkit>=3.0.0",
     "rich>=13.9.4",
@@ -25,6 +26,7 @@ y-cli = "ycli.command_option:cli"
 
 [tool.uv.sources]
 y-cli-storage = { workspace = true }
+y-cli-agent = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ycli"]

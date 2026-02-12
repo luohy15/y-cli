@@ -6,6 +6,7 @@ requires-python = ">=3.10"
 members = [
     "y-cli",
     "y-cli-admin",
+    "y-cli-agent",
     "y-cli-api",
     "y-cli-storage",
     "y-cli-worker",
@@ -427,6 +428,7 @@ dependencies = [
     { name = "rich" },
     { name = "tabulate" },
     { name = "wcwidth" },
+    { name = "y-cli-agent" },
     { name = "y-cli-storage" },
 ]
 
@@ -440,6 +442,7 @@ requires-dist = [
     { name = "rich", specifier = ">=13.9.4" },
     { name = "tabulate", specifier = ">=0.9.0" },
     { name = "wcwidth", specifier = ">=0.2.13" },
+    { name = "y-cli-agent", editable = "agent" },
     { name = "y-cli-storage", editable = "storage" },
 ]
 
@@ -457,6 +460,17 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.0" },
     { name = "y-cli-storage", editable = "storage" },
 ]
+
+[[package]]
+name = "y-cli-agent"
+version = "0.4.0"
+source = { editable = "agent" }
+dependencies = [
+    { name = "y-cli-storage" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "y-cli-storage", editable = "storage" }]
 
 [[package]]
 name = "y-cli-api"

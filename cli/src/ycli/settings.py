@@ -12,7 +12,7 @@ def load_config():
     home = os.path.expanduser(os.environ.get("Y_CLI_HOME", "~/.y-cli"))
     os.makedirs(home, exist_ok=True)
 
-    database_url = os.environ.get("DATABASE_URL")
+    database_url = os.getenv("DATABASE_URL")
     if not database_url:
         raise RuntimeError(
             "DATABASE_URL environment variable is required. "

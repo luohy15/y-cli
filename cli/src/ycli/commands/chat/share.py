@@ -3,7 +3,6 @@ import asyncio
 from typing import Optional
 import click
 
-from storage.repository import chat as chat_repo
 from storage.service import chat as chat_service
 from ycli.config import config
 
@@ -17,21 +16,19 @@ def share(chat_id: Optional[str], latest: bool, push: bool):
     Use --latest/-l to share your most recent chat.
     Use --chat-id/-c to share a specific chat ID.
     """
-    repository = chat_repo
-
     # Handle --latest flag
     if latest:
-        chats = asyncio.run(chat_service.list_chats(repository, limit=1))
+        chats = asyncio.run(chat_service.list_chats(limit=1))
         if not chats:
             click.echo("Error: No chats found to share")
             raise click.Abort()
-        chat_id = chats[0].id
+        chat_id = chats[0].chat_id
     elif not chat_id:
         raise click.Abort("Error: Chat ID is required for sharing")
 
     try:
         # Generate HTML file
-        tmp_file = asyncio.run(chat_service.generate_share_html(repository, chat_id))
+        tmp_file = asyncio.run(chat_service.generate_share_html(chat_id))
 
         if push and (not config["s3_bucket"] or not config["cloudfront_distribution_id"]):
             click.echo("Error: S3 bucket and CloudFront distribution ID must be configured")
