@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "y-cli"
+version = "0.4.0"
+description = "Personal command-line toolkit"
+requires-python = ">=3.10"
+dependencies = [
+    "y-cli-storage",
+    "click>=8.1.0",
+    "prompt-toolkit>=3.0.0",
+    "rich>=13.9.4",
+    "tabulate>=0.9.0",
+    "wcwidth>=0.2.13",
+    "pyperclip>=1.9.0",
+    "loguru>=0.7.3",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+y = "ycli.command_option:cli"
+y-cli = "ycli.command_option:cli"
+
+[tool.uv.sources]
+y-cli-storage = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ycli"]

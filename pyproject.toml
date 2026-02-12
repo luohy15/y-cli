@@ -1,23 +1,5 @@
-[project]
-name = "y-cli"
-version = "0.4.0"
-description = "Command-line real-time conversation app"
-readme = "README.md"
-requires-python = ">=3.10"
-dependencies = [
-    "httpx>=0.26.0",
-    "prompt-toolkit>=3.0.0",
-    "click>=8.1.0",
-"tabulate>=0.9.0",
-    "wcwidth>=0.2.13",
-    "rich>=13.9.4",
-    "pyperclip>=1.9.0",
+[tool.uv.workspace]
+members = ["storage", "cli", "api", "worker", "admin"]
 
-    "loguru>=0.7.3",
-    "python-dotenv>=1.0.0",
-    "aiosqlite>=0.20.0",
-    "sqlalchemy>=2.0.0",
-]
-
-[project.scripts]
-y-cli = "cli:cli"
+[tool.uv]
+dev-dependencies = []

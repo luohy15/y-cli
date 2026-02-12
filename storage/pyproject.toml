@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "y-cli-storage"
+version = "0.4.0"
+description = "Shared data layer for y-cli"
+requires-python = ">=3.10"
+dependencies = [
+    "sqlalchemy>=2.0.0",
+    "psycopg2-binary>=2.9.11",
+    "httpx>=0.26.0",
+    "python-dotenv>=1.0.0",
+    "loguru>=0.7.3",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/storage"]

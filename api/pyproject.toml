@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "y-cli-api"
+version = "0.4.0"
+description = "REST API for y-cli"
+requires-python = ">=3.10"
+dependencies = [
+    "y-cli-storage",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[tool.uv.sources]
+y-cli-storage = { workspace = true }
