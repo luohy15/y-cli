@@ -5,6 +5,7 @@ from cli.commands.chat.chat import chat
 from cli.commands.chat.list import list_chats
 from cli.commands.chat.share import share
 from cli.commands.chat.import_chat import import_chats
+from cli.commands.chat.export_chat import export_chats
 from cli.commands.bot import bot_group
 from cli.commands.prompt import prompt_group
 from config import bot_service
@@ -28,6 +29,7 @@ cli.add_command(chat)
 cli.add_command(list_chats)
 cli.add_command(share)
 cli.add_command(import_chats)
+cli.add_command(export_chats)
 cli.add_command(bot_group)
 cli.add_command(prompt_group)
 

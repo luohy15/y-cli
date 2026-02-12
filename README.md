@@ -8,6 +8,7 @@ Check out [y-gui](https://github.com/luohy15/y-gui) for a web-based version of y
 
 - 📝 Flexible storage options:
   - Local JSONL files for easy access and sync
+  - Local SQLite database
   - Cloudflare D1 for cloud storage
 - 💬 Interactive chat interface with tool execution visualization
 - 🤖 Support for multiple bot configurations (any base_url/api_key/model combination). Supported api format type:
@@ -102,6 +103,7 @@ y-cli [OPTIONS] COMMAND [ARGS]...
 - `list`   List chat conversations with optional filtering
 - `share`  Share a chat conversation by generating a shareable link
 - `import` Import chats from an external file (useful for storage migration)
+- `export` Export chats from current storage to a local SQLite file
 - `bot`    Manage bot configurations:
   - `add`     Add a new bot configuration
   - `list`    List all configured bots

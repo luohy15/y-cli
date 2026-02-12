@@ -16,10 +16,11 @@ def get_default_config():
         
     return {
         # Storage configuration
-        "storage_type": "file",  # Options: "file" or "cloudflare_d1"
+        "storage_type": "file",  # Options: "file", "sqlite", or "cloudflare_d1"
 
         # File storage paths
         "chat_file": f"{base_dir}/chat.jsonl",
+        "sqlite_file": f"{base_dir}/chat.db",
         "bot_config_file": f"{base_dir}/bot_config.jsonl",
         "prompt_config_file": f"{base_dir}/prompt_config.jsonl",
         "openrouter_import_dir": f"{base_dir}/openrouter_import",
@@ -30,6 +31,7 @@ def get_default_config():
         "cloudflare_d1": {
             "account_id": "",
             "database_id": "",
+            "database_name": "",
             "api_token": "",
             "user_prefix": "default"
         },
@@ -69,7 +71,7 @@ def load_config():
                     config[key] = value
 
     # Set up data files
-    for file_key in ["chat_file", "bot_config_file", "prompt_config_file", "tmp_dir"]:
+    for file_key in ["chat_file", "bot_config_file", "prompt_config_file", "sqlite_file", "tmp_dir"]:
         config[file_key] = os.path.expanduser(config[file_key])
         os.makedirs(os.path.dirname(config[file_key]), exist_ok=True)
 

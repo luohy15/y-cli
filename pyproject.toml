@@ -16,6 +16,7 @@ dependencies = [
     "aiofiles>=24.1.0",
     "loguru>=0.7.3",
     "python-dotenv>=1.0.0",
+    "aiosqlite>=0.20.0",
 ]
 
 [project.scripts]

@@ -3,6 +3,7 @@ from config import config
 from . import ChatRepository
 from .file import FileRepository
 from .cloudflare_d1 import CloudflareD1Repository
+from .sqlite import SqliteRepository
 
 def get_chat_repository() -> ChatRepository:
     """
@@ -15,6 +16,9 @@ def get_chat_repository() -> ChatRepository:
     # Check storage type configuration
     storage_type = config.get('storage_type', 'file')
     
+    if storage_type == 'sqlite':
+        return SqliteRepository()
+
     if storage_type == 'cloudflare_d1':
         d1_config = config.get('cloudflare_d1', {})
         required_keys = ['database_id', 'api_token']
