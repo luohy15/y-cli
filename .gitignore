@@ -1,3 +1,5 @@
+.aws-sam/
+
 # GitHub Actions config secrets
 .github/config*.json
 requirements.txt
