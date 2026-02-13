@@ -21,12 +21,26 @@ class DisplayManager:
         """Display a message in a panel with role-colored borders."""
         index_str = f"[{index}] " if index is not None else ""
 
-        # Tool call: shell command style
+        # Tool call: formatted display per tool type
         if message.role == "assistant" and message.tool:
-            import json
-            args_str = json.dumps(message.arguments, separators=(',', ':')) if message.arguments else "{}"
-            args_str = args_str[:200] + '...' if len(args_str) > 200 else args_str
-            self.console.print(f"[assistant]$ {message.tool}[/assistant]({args_str})\n")
+            args = message.arguments or {}
+            tool = message.tool
+            if tool == "bash":
+                cmd = args.get("command", "")
+                cmd = cmd[:200] + '...' if len(cmd) > 200 else cmd
+                display = f"[assistant]$ {cmd}[/assistant]"
+            elif tool == "file_read":
+                display = f'[assistant]read[/assistant]("{args.get("path", "")}")'
+            elif tool == "file_write":
+                display = f'[assistant]write[/assistant]("{args.get("path", "")}")'
+            elif tool == "file_edit":
+                display = f'[assistant]edit[/assistant]("{args.get("path", "")}")'
+            else:
+                import json
+                args_str = json.dumps(args, separators=(',', ':'))
+                args_str = args_str[:200] + '...' if len(args_str) > 200 else args_str
+                display = f"[assistant]$ {tool}[/assistant]({args_str})"
+            self.console.print(f"{display}\n")
             return
 
         # Tool result: shell output style

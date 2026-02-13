@@ -9,6 +9,7 @@ description = "Agent loop and tools for y-cli"
 requires-python = ">=3.10"
 dependencies = [
     "y-cli-storage",
+    "pyyaml",
 ]
 
 [tool.uv.sources]

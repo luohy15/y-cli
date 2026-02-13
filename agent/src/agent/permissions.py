@@ -33,6 +33,12 @@ class PermissionManager:
     # Tools that are always allowed without permission checks
     ALWAYS_ALLOWED = {"file_read", "file_write", "file_edit"}
 
+    # Read-only bash commands that are always allowed
+    READONLY_BASH_COMMANDS = {
+        "ls", "find", "cat", "head", "tail",
+        "grep", "wc", "date", "pwd", "echo",
+    }
+
     def __init__(self, config_path: Optional[str] = None):
         if config_path is None:
             home = os.path.expanduser(os.environ.get("Y_CLI_HOME", "~/.y-cli"))
@@ -87,6 +93,10 @@ class PermissionManager:
         parts = command.split(None, 1)
         program = parts[0]
         args = parts[1] if len(parts) > 1 else ""
+
+        # Read-only commands are always allowed
+        if program in self.READONLY_BASH_COMMANDS:
+            return True
 
         for pattern in self.allow_patterns:
             if not pattern.startswith("Bash(") or not pattern.endswith(")"):

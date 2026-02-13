@@ -31,7 +31,6 @@ class ChatManager:
         self.current_chat: Optional[Chat] = None
         self.external_id: Optional[str] = None
         self.messages: List[Message] = []
-        self.system_prompt: Optional[str] = None
         self.chat_id: Optional[str] = None
         self.continue_exist = False
 
@@ -41,6 +40,16 @@ class ChatManager:
             self.continue_exist = True
         else:
             self.chat_id = generate_id()
+
+    def _build_system_prompt(self) -> str:
+        """Build system prompt with current skills metadata."""
+        from agent.skills import discover_skills, skills_to_prompt
+
+        prompt = ""
+        skills_block = skills_to_prompt(discover_skills())
+        if skills_block:
+            prompt += "\n" + skills_block
+        return prompt
 
     async def _load_chat(self, chat_id: str):
         """Load an existing chat by ID"""
@@ -69,7 +78,6 @@ class ChatManager:
         from agent.loop import run_agent_loop
         from agent.tools import get_tools_map, get_openai_tools
 
-        self.system_prompt = ""
         tools_map = get_tools_map()
         openai_tools = get_openai_tools()
 
@@ -85,7 +93,7 @@ class ChatManager:
             await run_agent_loop(
                 provider=self.provider,
                 messages=self.messages,
-                system_prompt=self.system_prompt,
+                system_prompt=self._build_system_prompt(),
                 tools_map=tools_map,
                 openai_tools=openai_tools,
                 display_callback=self.display_manager.display_message_panel,
@@ -119,7 +127,7 @@ class ChatManager:
             await run_agent_loop(
                 provider=self.provider,
                 messages=self.messages,
-                system_prompt=self.system_prompt,
+                system_prompt=self._build_system_prompt(),
                 tools_map=tools_map,
                 openai_tools=openai_tools,
                 display_callback=self.display_manager.display_message_panel,

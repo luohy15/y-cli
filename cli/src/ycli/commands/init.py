@@ -1,20 +1,9 @@
 import os
 import click
 from ycli.config import config
+from storage.database.base import init_tables
 from storage.entity.dto import BotConfig
 from storage.service import bot_config as bot_service
-
-# Default model choices with index mapping and descriptions
-MODEL_CHOICES = {
-    "1": {
-        "name": "anthropic/claude-3.7-sonnet",
-        "description": "Best code implementation & tool use"
-    },
-    "2": {
-        "name": "google/gemini-2.0-flash-001",
-        "description": "Fast & strong all-rounder"
-    }
-}
 
 def print_config_info():
     """Print configuration information and available settings."""
@@ -37,8 +26,11 @@ def print_config_info():
 def init():
     """Initialize y-cli configuration with required settings.
 
-    Creates a config file then prompts for required settings.
+    Creates tables and prompts for required settings.
     """
+
+    # Ensure database tables exist
+    init_tables()
 
     # Get existing default config or create new one
     default_config = bot_service.get_config()
@@ -56,20 +48,11 @@ def init():
         show_default=False
     )
 
-    # Display model choices with descriptions
-    click.echo("\nSet default model:")
-    for idx, model_info in MODEL_CHOICES.items():
-        click.echo(f"{idx}. {click.style(model_info['name'], fg='cyan')} - {click.style(model_info['description'], fg='yellow')}")
-
-    # Prompt for model selection by index
-    model_idx = click.prompt(
-        "\nSelect the model to use (1-2)",
-        type=click.Choice(["1", "2"]),
-        default="1"
+    # Prompt for model name
+    model = click.prompt(
+        "Enter the model to use (e.g. anthropic/claude-sonnet-4-5)",
+        type=str
     )
-
-    # Get the selected model name
-    model = MODEL_CHOICES[model_idx]["name"]
 
     # Create new config with updated API key and model
     new_config = BotConfig(
