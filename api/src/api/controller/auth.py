@@ -11,8 +11,8 @@ from storage.repository.user import get_or_create_user_by_email
 
 router = APIRouter(prefix="/auth")
 
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
-JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "change-me")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 JWT_ALGORITHM = "HS256"
 
 

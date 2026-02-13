@@ -8,14 +8,6 @@ Parameters:
     Description: PostgreSQL database connection URL
     NoEcho: true
 
-  LambdaSecurityGroupId:
-    Type: String
-    Description: Security Group ID for Lambda functions to access RDS
-
-  SubnetIds:
-    Type: CommaDelimitedList
-    Description: Comma-delimited list of subnet IDs for Lambda VPC configuration
-
   JwtSecretKey:
     Type: String
     Description: Secret key for JWT token generation
@@ -198,10 +190,6 @@ Resources:
       Timeout: 900
       MemorySize: 512
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-lambda-role
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref LambdaSecurityGroupId
-        SubnetIds: !Ref SubnetIds
       Environment:
         Variables:
           DATABASE_URL: !Ref DatabaseUrl
@@ -233,10 +221,6 @@ Resources:
       Timeout: 900
       MemorySize: 1024
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-lambda-role
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref LambdaSecurityGroupId
-        SubnetIds: !Ref SubnetIds
       Environment:
         Variables:
           DATABASE_URL: !Ref DatabaseUrl
@@ -266,10 +250,6 @@ Resources:
       Timeout: 300
       MemorySize: 512
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-lambda-role
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref LambdaSecurityGroupId
-        SubnetIds: !Ref SubnetIds
       Environment:
         Variables:
           DATABASE_URL: !Ref DatabaseUrl

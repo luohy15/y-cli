@@ -53,11 +53,10 @@ echo "Deploying SAM application..."
 PARAM_OVERRIDES=""
 
 add_param "DatabaseUrl" "DATABASE_URL"
-add_param "LambdaSecurityGroupId" "LAMBDA_SECURITY_GROUP_ID"
-add_param "SubnetIds" "SUBNET_IDS"
 add_param "JwtSecretKey" "JWT_SECRET_KEY"
 add_param "DomainName" "DOMAIN_NAME"
 add_param "CertificateArn" "CERTIFICATE_ARN"
+add_param "GoogleClientId" "GOOGLE_CLIENT_ID"
 
 # ============================================================================
 # SAM Deploy
