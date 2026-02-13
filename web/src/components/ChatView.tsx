@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSWRConfig } from "swr";
 import { API, getToken } from "../api";
 import MessageBubble, { type BubbleRole } from "./MessageBubble";
 import ApprovalBar from "./ApprovalBar";
@@ -16,7 +17,6 @@ interface ContentPart {
 
 interface ChatViewProps {
   chatId: string | null;
-  onStatusChange: () => void;
 }
 
 function extractContent(content?: string | ContentPart[]): string {
@@ -49,7 +49,8 @@ function truncate(s: string, n: number): string {
   return s.length > n ? s.slice(0, n) + "..." : s;
 }
 
-export default function ChatView({ chatId, onStatusChange }: ChatViewProps) {
+export default function ChatView({ chatId }: ChatViewProps) {
+  const { mutate } = useSWRConfig();
   const [messages, setMessages] = useState<Message[]>([]);
   const [showApproval, setShowApproval] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -119,14 +120,14 @@ export default function ChatView({ chatId, onStatusChange }: ChatViewProps) {
     es.addEventListener("done", () => {
       addMessage({ role: "system", content: "Chat completed" });
       es.close();
-      onStatusChange();
+      mutate(`${API}/v1/chats`);
     });
     es.addEventListener("error", () => {});
 
     return () => {
       es.close();
     };
-  }, [chatId, addMessage, onStatusChange]);
+  }, [chatId, addMessage, mutate]);
 
   if (!chatId) {
     return (
@@ -148,7 +149,7 @@ export default function ChatView({ chatId, onStatusChange }: ChatViewProps) {
         visible={showApproval}
         onApproved={() => {
           setShowApproval(false);
-          onStatusChange();
+          mutate(`${API}/v1/chats`);
         }}
       />
     </div>

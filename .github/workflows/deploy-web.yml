@@ -48,7 +48,12 @@ jobs:
           fi
           echo "Deploying to bucket: $WEB_BUCKET_NAME"
 
-      - name: Deploy to S3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build and deploy to S3
         run: |
           chmod +x scripts/deploy-web.sh
           ./scripts/deploy-web.sh

@@ -13,10 +13,17 @@ if [ -f ".env" ]; then
     export $(grep -v '^#' .env | xargs)
 fi
 
-STATIC_DIR="web"
+# Build the web app
+echo "Building web app..."
+cd web
+npm ci
+VITE_GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID npm run build
+cd ..
+
+STATIC_DIR="web/dist"
 
 if [ ! -d "$STATIC_DIR" ]; then
-    echo "Error: Static files directory '$STATIC_DIR' not found"
+    echo "Error: Build failed - '$STATIC_DIR' not found"
     exit 1
 fi
 

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import { API, authFetch, clearToken } from "../api";
 
 interface Chat {
@@ -12,49 +13,24 @@ interface ChatListProps {
   isLoggedIn: boolean;
   selectedChatId: string | null;
   onSelectChat: (id: string | null) => void;
-  refreshKey: number;
-  onChatCreated: () => void;
 }
 
-export default function ChatList({ isLoggedIn, selectedChatId, onSelectChat, refreshKey, onChatCreated }: ChatListProps) {
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+const fetcher = async (url: string) => {
+  const res = await authFetch(url);
+  if (res.status === 401) {
+    clearToken();
+    throw new Error("Unauthorized");
+  }
+  return res.json();
+};
+
+export default function ChatList({ isLoggedIn, selectedChatId, onSelectChat }: ChatListProps) {
+  const { data: chats, error, isLoading, mutate } = useSWR<Chat[]>(
+    isLoggedIn ? `${API}/v1/chats` : null,
+    fetcher,
+  );
   const [prompt, setPrompt] = useState("");
   const [sending, setSending] = useState(false);
-
-  const fetchChats = useCallback(async () => {
-    if (!isLoggedIn) {
-      setChats([]);
-      setLoading(false);
-      return;
-    }
-    try {
-      const res = await authFetch(`${API}/v1/chats`);
-      if (res.status === 401) {
-        clearToken();
-        return;
-      }
-      const data: Chat[] = await res.json();
-      setChats(data);
-      setError(false);
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [isLoggedIn]);
-
-  useEffect(() => {
-    fetchChats();
-  }, [fetchChats, refreshKey]);
-
-  // Poll every 5s
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    const id = setInterval(fetchChats, 5000);
-    return () => clearInterval(id);
-  }, [isLoggedIn, fetchChats]);
 
   const createChat = async () => {
     const trimmed = prompt.trim();
@@ -67,7 +43,7 @@ export default function ChatList({ isLoggedIn, selectedChatId, onSelectChat, ref
         body: JSON.stringify({ prompt: trimmed }),
       });
       setPrompt("");
-      onChatCreated();
+      mutate();
     } finally {
       setSending(false);
     }
@@ -104,11 +80,11 @@ export default function ChatList({ isLoggedIn, selectedChatId, onSelectChat, ref
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {!isLoggedIn ? (
           <p className="text-neutral-500 italic text-sm p-3">Sign in to view chats</p>
-        ) : loading ? (
+        ) : isLoading ? (
           <p className="text-neutral-500 italic text-sm p-3">Loading...</p>
         ) : error ? (
           <p className="text-neutral-500 italic text-sm p-3">Error loading chats</p>
-        ) : chats.length === 0 ? (
+        ) : !chats || chats.length === 0 ? (
           <p className="text-neutral-500 italic text-sm p-3">No chats yet</p>
         ) : (
           chats.map((c) => {

@@ -1,3 +1,5 @@
+# GitHub Actions config secrets
+.github/config*.json
 requirements.txt
 .vscode
 .env

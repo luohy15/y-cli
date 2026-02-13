@@ -1,29 +1,23 @@
 import { useEffect, useRef } from "react";
-import { GOOGLE_CLIENT_ID } from "../hooks/useAuth";
 
 interface HeaderProps {
   email: string | null;
   isLoggedIn: boolean;
+  gsiReady: boolean;
   onLogout: () => void;
 }
 
-export default function Header({ email, isLoggedIn, onLogout }: HeaderProps) {
+export default function Header({ email, isLoggedIn, gsiReady, onLogout }: HeaderProps) {
   const signinRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isLoggedIn || !GOOGLE_CLIENT_ID || !signinRef.current) return;
-    const interval = setInterval(() => {
-      if ((window as any).google?.accounts?.id && signinRef.current) {
-        clearInterval(interval);
-        (window as any).google.accounts.id.renderButton(signinRef.current, {
-          theme: "filled_black",
-          size: "medium",
-          shape: "pill",
-        });
-      }
-    }, 100);
-    return () => clearInterval(interval);
-  }, [isLoggedIn]);
+    if (isLoggedIn || !gsiReady || !signinRef.current) return;
+    (window as any).google.accounts.id.renderButton(signinRef.current, {
+      theme: "filled_black",
+      size: "medium",
+      shape: "pill",
+    });
+  }, [isLoggedIn, gsiReady]);
 
   return (
     <header className="px-6 py-4 border-b border-neutral-800 shrink-0 flex items-center justify-between">

@@ -5,7 +5,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "change-me")
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 JWT_ALGORITHM = "HS256"
 
 PUBLIC_PREFIXES = ("/auth", "/docs", "/openapi.json")
@@ -14,6 +14,10 @@ PUBLIC_PREFIXES = ("/auth", "/docs", "/openapi.json")
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
+
+        # Allow CORS preflight requests
+        if request.method == "OPTIONS":
+            return await call_next(request)
 
         # Allow public routes
         if any(path.startswith(p) for p in PUBLIC_PREFIXES):

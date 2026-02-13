@@ -1,4 +1,4 @@
-export const API = window.location.origin;
+export const API = (import.meta as any).env?.VITE_API_URL || window.location.origin;
 
 export function getToken(): string | null {
   return localStorage.getItem("jwt_token");

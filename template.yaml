@@ -31,6 +31,11 @@ Parameters:
     Description: ACM Certificate ARN for custom domain (must be in us-east-1)
     Default: ""
 
+  GoogleClientId:
+    Type: String
+    Description: Google OAuth Client ID
+    Default: ""
+
 Globals:
   Function:
     Timeout: 900
@@ -203,6 +208,7 @@ Resources:
           DYNAMODB_TABLE: !Ref CacheTable
           SQS_QUEUE_URL: !Ref JobQueue
           JWT_SECRET_KEY: !Ref JwtSecretKey
+          GOOGLE_CLIENT_ID: !Ref GoogleClientId
           AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
           AWS_LWA_INVOKE_MODE: response_stream
           PORT: "8000"

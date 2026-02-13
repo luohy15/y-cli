@@ -74,6 +74,7 @@ jobs:
           [ -n "$JWT_SECRET_KEY" ] && PARAM_OVERRIDES="$PARAM_OVERRIDES JwtSecretKey=$JWT_SECRET_KEY"
           [ -n "$DOMAIN_NAME" ] && PARAM_OVERRIDES="$PARAM_OVERRIDES DomainName=$DOMAIN_NAME"
           [ -n "$CERTIFICATE_ARN" ] && PARAM_OVERRIDES="$PARAM_OVERRIDES CertificateArn=$CERTIFICATE_ARN"
+          [ -n "$GOOGLE_CLIENT_ID" ] && PARAM_OVERRIDES="$PARAM_OVERRIDES GoogleClientId=$GOOGLE_CLIENT_ID"
 
           if [ -n "$PARAM_OVERRIDES" ]; then
             sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides $PARAM_OVERRIDES

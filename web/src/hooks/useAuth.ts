@@ -6,6 +6,7 @@ const GOOGLE_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || "";
 export function useAuth() {
   const [email, setEmail] = useState<string | null>(getStoredEmail());
   const [isLoggedIn, setIsLoggedIn] = useState(!!getToken());
+  const [gsiReady, setGsiReady] = useState(false);
 
   const login = useCallback(async (credential: string) => {
     try {
@@ -54,12 +55,13 @@ export function useAuth() {
           client_id: GOOGLE_CLIENT_ID,
           callback: (window as any).handleGoogleCredential,
         });
+        setGsiReady(true);
       }
     }, 100);
     return () => clearInterval(interval);
   }, []);
 
-  return { email, isLoggedIn, login, logout };
+  return { email, isLoggedIn, gsiReady, login, logout };
 }
 
 export { GOOGLE_CLIENT_ID };
