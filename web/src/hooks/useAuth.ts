@@ -10,7 +10,7 @@ export function useAuth() {
 
   const login = useCallback(async (credential: string) => {
     try {
-      const res = await fetch(`${API}/auth/google`, {
+      const res = await fetch(`${API}/api/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id_token: credential }),

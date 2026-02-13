@@ -77,7 +77,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
 
     const token = getToken();
     const tokenParam = token ? `&token=${encodeURIComponent(token)}` : "";
-    const es = new EventSource(`${API}/v1/chats/${chatId}/events?last_index=0${tokenParam}`);
+    const es = new EventSource(`${API}/api/chat/events?chat_id=${chatId}&last_index=0${tokenParam}`);
 
     const handleMessage = (raw: string) => {
       try {
@@ -120,7 +120,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
     es.addEventListener("done", () => {
       addMessage({ role: "system", content: "Chat completed" });
       es.close();
-      mutate(`${API}/v1/chats`);
+      mutate(`${API}/api/chat/list`);
     });
     es.addEventListener("error", () => {});
 
@@ -149,7 +149,7 @@ export default function ChatView({ chatId }: ChatViewProps) {
         visible={showApproval}
         onApproved={() => {
           setShowApproval(false);
-          mutate(`${API}/v1/chats`);
+          mutate(`${API}/api/chat/list`);
         }}
       />
     </div>

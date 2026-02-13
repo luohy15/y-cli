@@ -8,8 +8,7 @@ from starlette.responses import JSONResponse
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 JWT_ALGORITHM = "HS256"
 
-PUBLIC_PREFIXES = ("/auth", "/docs", "/openapi.json")
-
+PUBLIC_PREFIXES = ("/api/auth", "/docs", "/openapi.json")
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -24,7 +23,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Allow static files (served at root by StaticFiles mount)
-        if not path.startswith("/v1"):
+        if not path.startswith("/api/chat"):
             return await call_next(request)
 
         # Protected routes require JWT (header or query param for SSE)

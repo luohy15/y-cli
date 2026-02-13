@@ -9,10 +9,10 @@ interface ApprovalBarProps {
 
 export default function ApprovalBar({ chatId, visible, onApproved }: ApprovalBarProps) {
   const approve = useCallback(async (approved: boolean) => {
-    await authFetch(`${API}/v1/chats/${chatId}/approve`, {
+    await authFetch(`${API}/api/chat/approve`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ approved }),
+      body: JSON.stringify({ chat_id: chatId, approved }),
     });
     onApproved();
   }, [chatId, onApproved]);

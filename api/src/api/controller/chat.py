@@ -14,7 +14,7 @@ from storage.cache import cache_chat, get_cached_chat, list_cached_chats, resolv
 from storage.service import chat as chat_service
 from storage.util import generate_message_id, get_iso8601_timestamp, get_unix_timestamp
 
-router = APIRouter(prefix="/v1")
+router = APIRouter(prefix="/chat")
 
 
 class _DecimalEncoder(json.JSONEncoder):
@@ -56,6 +56,7 @@ class CreateChatResponse(BaseModel):
 
 
 class ApproveRequest(BaseModel):
+    chat_id: str
     approved: bool
 
 
@@ -63,13 +64,13 @@ def _get_user_id(request: Request) -> int:
     return request.state.user_id
 
 
-@router.get("/chats")
+@router.get("/list")
 async def get_chats():
     chats = list_cached_chats()
     return json.loads(json.dumps(chats, cls=_DecimalEncoder))
 
 
-@router.post("/chats", response_model=CreateChatResponse)
+@router.post("")
 async def post_create_chat(req: CreateChatRequest, request: Request):
     chat_id = req.chat_id or str(uuid.uuid4())
     user_id = _get_user_id(request)
@@ -106,20 +107,20 @@ async def post_create_chat(req: CreateChatRequest, request: Request):
     return CreateChatResponse(chat_id=chat_id)
 
 
-@router.post("/chats/{chat_id}/approve")
-async def post_approve(chat_id: str, req: ApproveRequest):
-    cached = get_cached_chat(chat_id)
+@router.post("/approve")
+async def post_approve(req: ApproveRequest):
+    cached = get_cached_chat(req.chat_id)
     if cached is None:
         raise HTTPException(status_code=404, detail="chat not found")
     if cached.get("status") != "waiting_approval":
         raise HTTPException(status_code=400, detail="chat is not waiting for approval")
-    resolve_approval(chat_id, req.approved)
-    _send_chat_message(chat_id)
+    resolve_approval(req.chat_id, req.approved)
+    _send_chat_message(req.chat_id)
     return {"ok": True}
 
 
-@router.get("/chats/{chat_id}/events")
-async def get_chat_events(chat_id: str, last_index: int = Query(0, ge=0)):
+@router.get("/events")
+async def get_chat_events(chat_id: str = Query(...), last_index: int = Query(0, ge=0)):
     async def event_stream():
         idx = last_index
         while True:

@@ -26,7 +26,7 @@ const fetcher = async (url: string) => {
 
 export default function ChatList({ isLoggedIn, selectedChatId, onSelectChat }: ChatListProps) {
   const { data: chats, error, isLoading, mutate } = useSWR<Chat[]>(
-    isLoggedIn ? `${API}/v1/chats` : null,
+    isLoggedIn ? `${API}/api/chat/list` : null,
     fetcher,
   );
   const [prompt, setPrompt] = useState("");
@@ -37,7 +37,7 @@ export default function ChatList({ isLoggedIn, selectedChatId, onSelectChat }: C
     if (!trimmed) return;
     setSending(true);
     try {
-      await authFetch(`${API}/v1/chats`, {
+      await authFetch(`${API}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: trimmed }),
