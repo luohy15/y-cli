@@ -1,9 +1,10 @@
 import sys
 import os
-from typing import List, Optional
+from typing import Dict, List, Optional
 from storage.entity.dto import Chat, Message
 from storage.repository import chat as chat_repo
 from storage.repository.chat import ChatSummary
+from storage.cache import cache_chat, get_cached_chat
 
 from storage.util import get_iso8601_timestamp, generate_id
 
@@ -39,12 +40,69 @@ async def update_chat(chat_id: str, messages: List[Message], external_id: Option
     return await chat_repo.update_chat(chat)
 
 
+# ---------------------------------------------------------------------------
+# Cache-aware methods (for API/worker use)
+# ---------------------------------------------------------------------------
+
+async def create_chat_with_cache(
+    messages: List[Message],
+    chat_id: Optional[str] = None,
+    status: Optional[str] = None,
+    bot_name: Optional[str] = None,
+    prompt: Optional[str] = None,
+) -> Chat:
+    """Create chat in DB and populate cache."""
+    timestamp = get_iso8601_timestamp()
+    chat = Chat(
+        id=chat_id if chat_id else generate_id(),
+        create_time=timestamp,
+        update_time=timestamp,
+        messages=[msg for msg in messages if msg.role != 'system'],
+        status=status,
+        bot_name=bot_name,
+    )
+    chat = await chat_repo.add_chat(chat)
+    # Populate cache with chat data + transient fields
+    cache_data: Dict = chat.to_dict()
+    if prompt:
+        cache_data["prompt"] = prompt
+    cache_chat(chat.id, cache_data)
+    return chat
+
+
+async def get_chat_with_cache(chat_id: str) -> Optional[Dict]:
+    """Cache-aside read: check cache first, fallback to DB, backfill cache."""
+    cached = get_cached_chat(chat_id)
+    if cached:
+        return cached
+    chat = await chat_repo.get_chat(chat_id)
+    if not chat:
+        return None
+    cache_data = chat.to_dict()
+    cache_chat(chat_id, cache_data)
+    return cache_data
+
+
+async def update_chat_with_cache(chat_id: str, messages: List[Message], status: Optional[str] = None) -> Chat:
+    """Update chat in DB and refresh cache."""
+    chat = await get_chat(chat_id)
+    if not chat:
+        raise ValueError(f"Chat with id {chat_id} not found")
+    chat.update_messages(messages)
+    if status is not None:
+        chat.status = status
+    chat = await chat_repo.update_chat(chat)
+    cache_data = chat.to_dict()
+    cache_chat(chat_id, cache_data)
+    return chat
+
+
 async def delete_chat(chat_id: str) -> bool:
     return await chat_repo.delete_chat(chat_id)
 
 
 async def generate_share_html(chat_id: str) -> str:
-    home = os.path.expanduser(os.environ.get("Y_CLI_HOME", "~/.y-cli"))
+    home = os.path.expanduser(os.environ.get("Y_AGENT_HOME", "~/.y-agent"))
     tmp_dir = os.path.join(home, "tmp")
     chat = await get_chat(chat_id)
     if not chat:

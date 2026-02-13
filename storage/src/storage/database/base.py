@@ -1,7 +1,12 @@
 """Database setup for PostgreSQL."""
 
+import os
 from contextlib import contextmanager
 from typing import Optional
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
@@ -56,7 +61,12 @@ def init_tables():
 def get_db() -> Session:
     """Context manager that yields a SQLAlchemy session."""
     if _SessionLocal is None:
-        raise RuntimeError("Database not initialized. Call init_db() first.")
+        # Auto-initialize from DATABASE_URL env var
+        database_url = os.environ.get("DATABASE_URL")
+        if database_url:
+            init_db(database_url)
+        else:
+            raise RuntimeError("Database not initialized. Set DATABASE_URL or call init_db() first.")
     session = _SessionLocal()
     try:
         yield session

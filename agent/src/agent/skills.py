@@ -31,7 +31,7 @@ def _parse_frontmatter(content: str) -> dict:
 def discover_skills(skills_dir: Optional[str] = None) -> List[SkillMeta]:
     """Discover skills from the skills directory."""
     if skills_dir is None:
-        base = os.environ.get("Y_CLI_HOME", os.path.expanduser("~/.y-cli"))
+        base = os.environ.get("Y_AGENT_HOME", os.path.expanduser("~/.y-agent"))
         skills_dir = os.path.join(base, "skills")
 
     if not os.path.isdir(skills_dir):

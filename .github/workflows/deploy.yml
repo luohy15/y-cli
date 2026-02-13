@@ -1,0 +1,82 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'default'
+        type: choice
+        options:
+          - default
+
+env:
+  AWS_REGION: us-east-1
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || (github.ref == 'refs/heads/main' && 'prod') || 'default' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Parse config
+        id: config
+        run: |
+          CONFIG='${{ secrets.CONFIG }}'
+          echo "$CONFIG" | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+          echo "$CONFIG" | jq -r '.[]' | while read -r value; do
+            [ -n "$value" ] && echo "::add-mask::$value"
+          done
+
+      - name: Export dependencies
+        run: |
+          cd api && uv export --format=requirements-txt --no-hashes | grep -v "^-e \." > requirements.txt && cd ..
+          cd admin && uv export --format=requirements-txt --no-hashes | grep -v "^-e \." > requirements.txt && cd ..
+          cd worker && uv export --format=requirements-txt --no-hashes | grep -v "^-e \." > requirements.txt && cd ..
+
+      - name: Build SAM application
+        run: sam build
+
+      - name: Deploy to AWS
+        run: |
+          PARAM_OVERRIDES=""
+          [ -n "$DATABASE_URL" ] && PARAM_OVERRIDES="$PARAM_OVERRIDES DatabaseUrl=$DATABASE_URL"
+          [ -n "$LAMBDA_SECURITY_GROUP_ID" ] && PARAM_OVERRIDES="$PARAM_OVERRIDES LambdaSecurityGroupId=$LAMBDA_SECURITY_GROUP_ID"
+          [ -n "$SUBNET_IDS" ] && PARAM_OVERRIDES="$PARAM_OVERRIDES SubnetIds=$SUBNET_IDS"
+          [ -n "$JWT_SECRET_KEY" ] && PARAM_OVERRIDES="$PARAM_OVERRIDES JwtSecretKey=$JWT_SECRET_KEY"
+          [ -n "$DOMAIN_NAME" ] && PARAM_OVERRIDES="$PARAM_OVERRIDES DomainName=$DOMAIN_NAME"
+          [ -n "$CERTIFICATE_ARN" ] && PARAM_OVERRIDES="$PARAM_OVERRIDES CertificateArn=$CERTIFICATE_ARN"
+
+          if [ -n "$PARAM_OVERRIDES" ]; then
+            sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --parameter-overrides $PARAM_OVERRIDES
+          else
+            sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+          fi

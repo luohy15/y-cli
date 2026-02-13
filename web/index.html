@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>yovy</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body class="h-full bg-neutral-950 text-neutral-200 font-mono flex flex-col">
+
+  <!-- Header -->
+  <header class="px-6 py-4 border-b border-neutral-800 shrink-0">
+    <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent inline">yovy</h1>
+  </header>
+
+  <!-- Two-column layout -->
+  <div class="flex flex-1 min-h-0">
+
+    <!-- Left panel -->
+    <div class="w-80 min-w-[260px] border-r border-neutral-800 flex flex-col shrink-0">
+      <!-- New chat input -->
+      <div class="flex gap-2 p-3 border-b border-neutral-800">
+        <input id="prompt-input" type="text" placeholder="New chat..."
+          class="flex-1 px-2.5 py-1.5 bg-neutral-900 border border-neutral-700 rounded-md text-sm text-neutral-200 outline-none focus:border-blue-400" autofocus>
+        <button id="submit-btn" onclick="createChat()"
+          class="px-3.5 py-1.5 bg-blue-400 text-neutral-950 rounded-md text-sm font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Send</button>
+      </div>
+      <!-- Chats list -->
+      <div id="chats-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+        <p class="text-neutral-500 italic text-sm p-3">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="flex-1 flex flex-col min-w-0">
+      <div id="chat-placeholder" class="flex-1 flex items-center justify-center text-neutral-600 text-sm">Select a chat to view its conversation</div>
+      <div id="chat-container" class="flex-1 overflow-y-auto px-6 py-4 flex-col gap-3 hidden"></div>
+      <div id="approval-bar" class="px-6 py-3 border-t border-neutral-800 items-center gap-2 hidden">
+        <span class="text-sm text-yellow-400 mr-2">Tool requires approval</span>
+        <button onclick="approve(true)" class="px-3 py-1.5 bg-green-400 text-neutral-950 rounded-md text-sm font-semibold cursor-pointer">Approve</button>
+        <button onclick="approve(false)" class="px-3 py-1.5 bg-red-400 text-neutral-950 rounded-md text-sm font-semibold cursor-pointer">Deny</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -63,6 +63,8 @@ class Message:
         if unix_timestamp is None:
             dt = datetime.strptime(data['timestamp'].split('+')[0], "%Y-%m-%dT%H:%M:%S")
             unix_timestamp = int(dt.timestamp() * 1000)
+        else:
+            unix_timestamp = int(unix_timestamp)
 
         content = data['content']
         if isinstance(content, list):
@@ -133,6 +135,8 @@ class Chat:
     origin_chat_id: Optional[str] = None
     origin_message_id: Optional[str] = None
     selected_message_id: Optional[str] = None
+    status: Optional[str] = None
+    bot_name: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: Dict) -> 'Chat':
@@ -148,7 +152,9 @@ class Chat:
             content_hash=data.get('content_hash'),
             origin_chat_id=data.get('origin_chat_id'),
             origin_message_id=data.get('origin_message_id'),
-            selected_message_id=data.get('selected_message_id')
+            selected_message_id=data.get('selected_message_id'),
+            status=data.get('status'),
+            bot_name=data.get('bot_name'),
         )
 
     def to_dict(self) -> Dict:
@@ -168,6 +174,10 @@ class Chat:
             result['origin_message_id'] = self.origin_message_id
         if self.selected_message_id is not None:
             result['selected_message_id'] = self.selected_message_id
+        if self.status is not None:
+            result['status'] = self.status
+        if self.bot_name is not None:
+            result['bot_name'] = self.bot_name
         return result
 
     def update_messages(self, messages: List[Message]) -> None:

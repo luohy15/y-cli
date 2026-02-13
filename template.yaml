@@ -1,0 +1,339 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: y-agent serverless backend — API, Worker, Admin with shared Storage and Agent layers
+
+Parameters:
+  DatabaseUrl:
+    Type: String
+    Description: PostgreSQL database connection URL
+    NoEcho: true
+
+  LambdaSecurityGroupId:
+    Type: String
+    Description: Security Group ID for Lambda functions to access RDS
+
+  SubnetIds:
+    Type: CommaDelimitedList
+    Description: Comma-delimited list of subnet IDs for Lambda VPC configuration
+
+  JwtSecretKey:
+    Type: String
+    Description: Secret key for JWT token generation
+    NoEcho: true
+
+  DomainName:
+    Type: String
+    Description: Custom domain name for the API
+    Default: ""
+
+  CertificateArn:
+    Type: String
+    Description: ACM Certificate ARN for custom domain (must be in us-east-1)
+    Default: ""
+
+Globals:
+  Function:
+    Timeout: 900
+    MemorySize: 512
+
+Resources:
+  # -----------------------------------------------------------------------
+  # SQS — async job queue
+  # -----------------------------------------------------------------------
+  JobQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-job-queue
+      VisibilityTimeout: 960  # 16 minutes (longer than Lambda timeout)
+      MessageRetentionPeriod: 1209600  # 14 days
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt JobQueueDLQ.Arn
+        maxReceiveCount: 3
+
+  JobQueueDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${AWS::StackName}-job-queue-dlq
+      MessageRetentionPeriod: 1209600  # 14 days
+
+  # -----------------------------------------------------------------------
+  # DynamoDB — job state / cache
+  # -----------------------------------------------------------------------
+  CacheTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${AWS::StackName}-jobs
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Purpose
+          Value: y-agent Job Queue
+
+  # -----------------------------------------------------------------------
+  # Web — S3 static site + CloudFront CDN
+  # -----------------------------------------------------------------------
+  WebBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-web-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+
+  WebBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub ${WebBucket.Arn}/*
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: allow-all
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf
+        CacheBehaviors:
+          - PathPattern: /api/*
+            TargetOriginId: APIOrigin
+            ViewerProtocolPolicy: allow-all
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - PATCH
+              - POST
+              - DELETE
+        Origins:
+          - Id: S3Origin
+            DomainName: !Sub ${WebBucket}.s3-website-${AWS::Region}.amazonaws.com
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: http-only
+          - Id: APIOrigin
+            DomainName: !Select [2, !Split ["/", !GetAtt APIFunctionUrl.FunctionUrl]]
+            CustomOriginConfig:
+              HTTPPort: 443
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+        Enabled: true
+        DefaultRootObject: index.html
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+
+  # -----------------------------------------------------------------------
+  # Layers — shared code packaged as Lambda layers
+  # -----------------------------------------------------------------------
+  StorageLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub ${AWS::StackName}-storage-layer
+      Description: Shared storage module (entity, repository, service, cache)
+      ContentUri: storage
+      CompatibleRuntimes:
+        - python3.13
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  AgentLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub ${AWS::StackName}-agent-layer
+      Description: Agent loop, providers, tools, and permissions
+      ContentUri: agent
+      CompatibleRuntimes:
+        - python3.13
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+
+  # -----------------------------------------------------------------------
+  # API — FastAPI behind Lambda Web Adapter (response streaming)
+  # -----------------------------------------------------------------------
+  APIFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-api
+      CodeUri: api
+      Handler: run.sh
+      Runtime: python3.13
+      Timeout: 900
+      MemorySize: 512
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-lambda-role
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroupId
+        SubnetIds: !Ref SubnetIds
+      Environment:
+        Variables:
+          DATABASE_URL: !Ref DatabaseUrl
+          DYNAMODB_TABLE: !Ref CacheTable
+          SQS_QUEUE_URL: !Ref JobQueue
+          JWT_SECRET_KEY: !Ref JwtSecretKey
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap
+          AWS_LWA_INVOKE_MODE: response_stream
+          PORT: "8000"
+      Layers:
+        # Lambda Web Adapter for response streaming
+        - !Sub arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayerX86:25
+        - !Ref StorageLayer
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+
+  # -----------------------------------------------------------------------
+  # Worker — processes jobs from SQS
+  # -----------------------------------------------------------------------
+  WorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-worker
+      CodeUri: worker
+      Handler: handler.lambda_handler
+      Runtime: python3.13
+      Timeout: 900
+      MemorySize: 1024
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-lambda-role
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroupId
+        SubnetIds: !Ref SubnetIds
+      Environment:
+        Variables:
+          DATABASE_URL: !Ref DatabaseUrl
+          DYNAMODB_TABLE: !Ref CacheTable
+          SQS_QUEUE_URL: !Ref JobQueue
+      Layers:
+        - !Ref StorageLayer
+        - !Ref AgentLayer
+      Events:
+        SQSTrigger:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt JobQueue.Arn
+            BatchSize: 1
+            MaximumBatchingWindowInSeconds: 0
+
+  # -----------------------------------------------------------------------
+  # Admin — database init / migrations
+  # -----------------------------------------------------------------------
+  AdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-admin
+      CodeUri: admin
+      Handler: handler.lambda_handler
+      Runtime: python3.13
+      Timeout: 300
+      MemorySize: 512
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}-lambda-role
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroupId
+        SubnetIds: !Ref SubnetIds
+      Environment:
+        Variables:
+          DATABASE_URL: !Ref DatabaseUrl
+          DYNAMODB_TABLE: !Ref CacheTable
+      Layers:
+        - !Ref StorageLayer
+      Events:
+        InitDbSchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 6 * * ? *)
+            Input: '{"action": "init_db"}'
+
+Outputs:
+  APIFunctionArn:
+    Description: ARN of the API Lambda function
+    Value: !GetAtt APIFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-api-function-arn
+
+  APIFunctionUrl:
+    Description: Function URL for API with streaming support
+    Value: !GetAtt APIFunctionUrl.FunctionUrl
+    Export:
+      Name: !Sub ${AWS::StackName}-api-function-url
+
+  WorkerFunctionArn:
+    Description: ARN of the Worker Lambda function
+    Value: !GetAtt WorkerFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-worker-function-arn
+
+  AdminFunctionArn:
+    Description: ARN of the Admin Lambda function
+    Value: !GetAtt AdminFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-admin-function-arn
+
+  CacheTableName:
+    Description: Name of the DynamoDB jobs table
+    Value: !Ref CacheTable
+    Export:
+      Name: !Sub ${AWS::StackName}-cache-table
+
+  WebBucketName:
+    Description: Name of the web static files S3 bucket
+    Value: !Ref WebBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-web-bucket
+
+  CloudFrontDistributionId:
+    Description: CloudFront distribution ID
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Sub ${AWS::StackName}-cloudfront-id
+
+  CloudFrontDomainName:
+    Description: CloudFront distribution domain name for DNS configuration
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub ${AWS::StackName}-cloudfront-domain
+
+  JobQueueUrl:
+    Description: URL of the job queue
+    Value: !Ref JobQueue
+    Export:
+      Name: !Sub ${AWS::StackName}-job-queue-url
+
+  JobQueueArn:
+    Description: ARN of the job queue
+    Value: !GetAtt JobQueue.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-job-queue-arn

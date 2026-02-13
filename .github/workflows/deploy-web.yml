@@ -1,0 +1,54 @@
+name: Deploy Web
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'web/**'
+      - 'scripts/deploy-web.sh'
+      - '.github/workflows/deploy-web.yml'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Parse config
+        run: |
+          CONFIG='${{ secrets.CONFIG }}'
+          echo "$CONFIG" | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+          echo "$CONFIG" | jq -r '.[]' | while read -r value; do
+            [ -n "$value" ] && echo "::add-mask::$value"
+          done
+
+      - name: Validate required config
+        run: |
+          if [ -z "$WEB_BUCKET_NAME" ]; then
+            echo "::error::WEB_BUCKET_NAME is required but not set in CONFIG secret"
+            exit 1
+          fi
+          echo "Deploying to bucket: $WEB_BUCKET_NAME"
+
+      - name: Deploy to S3
+        run: |
+          chmod +x scripts/deploy-web.sh
+          ./scripts/deploy-web.sh

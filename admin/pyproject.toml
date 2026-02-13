@@ -3,12 +3,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "y-cli-admin"
+name = "y-agent-admin"
 version = "0.4.0"
-description = "Admin and migration scripts for y-cli"
+description = "Admin and migration scripts for y-agent"
 requires-python = ">=3.10"
 dependencies = [
-    "y-cli-storage",
+    "y-agent-storage",
     "sqlalchemy>=2.0.0",
 ]
 
@@ -16,4 +16,4 @@ dependencies = [
 packages = ["."]
 
 [tool.uv.sources]
-y-cli-storage = { workspace = true }
+y-agent-storage = { workspace = true }

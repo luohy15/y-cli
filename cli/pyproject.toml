@@ -3,13 +3,13 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "y-cli"
+name = "y-agent-cli"
 version = "0.4.0"
-description = "Personal command-line toolkit"
+description = "Personal AI agent toolkit"
 requires-python = ">=3.10"
 dependencies = [
-    "y-cli-storage",
-    "y-cli-agent",
+    "y-agent-storage",
+    "y-agent-agent",
     "click>=8.1.0",
     "prompt-toolkit>=3.0.0",
     "rich>=13.9.4",
@@ -21,12 +21,12 @@ dependencies = [
 ]
 
 [project.scripts]
-y = "ycli.command_option:cli"
-y-cli = "ycli.command_option:cli"
+y = "yagent.command_option:cli"
+y-agent = "yagent.command_option:cli"
 
 [tool.uv.sources]
-y-cli-storage = { workspace = true }
-y-cli-agent = { workspace = true }
+y-agent-storage = { workspace = true }
+y-agent-agent = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ycli"]
+packages = ["src/yagent"]

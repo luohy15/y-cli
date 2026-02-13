@@ -1,3 +1,4 @@
+requirements.txt
 .vscode
 .env
 dev_docs
@@ -15,3 +16,4 @@ wheels/
 .venv
 
 .DS_Store
+node_modules/

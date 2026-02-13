@@ -3,17 +3,18 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "y-cli-agent"
+name = "y-agent-agent"
 version = "0.4.0"
-description = "Agent loop and tools for y-cli"
+description = "Agent loop and tools for y-agent"
 requires-python = ">=3.10"
 dependencies = [
-    "y-cli-storage",
+    "y-agent-storage",
     "pyyaml",
+    "httpx>=0.26.0",
 ]
 
 [tool.uv.sources]
-y-cli-storage = { workspace = true }
+y-agent-storage = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agent"]

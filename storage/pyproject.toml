@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "y-cli-storage"
+name = "y-agent-storage"
 version = "0.4.0"
-description = "Shared data layer for y-cli"
+description = "Shared data layer for y-agent"
 requires-python = ">=3.10"
 dependencies = [
     "sqlalchemy>=2.0.0",
@@ -13,6 +13,7 @@ dependencies = [
     "httpx>=0.26.0",
     "python-dotenv>=1.0.0",
     "loguru>=0.7.3",
+    "boto3>=1.34.0",
 ]
 
 [tool.hatch.build.targets.wheel]

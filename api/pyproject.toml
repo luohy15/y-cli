@@ -3,16 +3,21 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "y-cli-api"
+name = "y-agent-api"
 version = "0.4.0"
-description = "REST API for y-cli"
+description = "REST API for y-agent"
 requires-python = ">=3.10"
 dependencies = [
-    "y-cli-storage",
+    "y-agent-storage",
+    "y-agent-agent",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "sse-starlette>=2.0.0",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["."]
+packages = ["src/api"]
 
 [tool.uv.sources]
-y-cli-storage = { workspace = true }
+y-agent-storage = { workspace = true }
+y-agent-agent = { workspace = true }

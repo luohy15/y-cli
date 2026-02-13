@@ -3,7 +3,7 @@
 Tools like file_read and file_write are always allowed.
 Bash commands require matching against an allow list with glob-style patterns.
 
-Config file: ~/.y-cli/permissions.json
+Config file: ~/.y-agent/permissions.json
 Example:
 {
     "permissions": {
@@ -41,7 +41,7 @@ class PermissionManager:
 
     def __init__(self, config_path: Optional[str] = None):
         if config_path is None:
-            home = os.path.expanduser(os.environ.get("Y_CLI_HOME", "~/.y-cli"))
+            home = os.path.expanduser(os.environ.get("Y_AGENT_HOME", "~/.y-agent"))
             config_path = os.path.join(home, "permissions.json")
         self.config_path = config_path
         self.allow_patterns: List[str] = []
