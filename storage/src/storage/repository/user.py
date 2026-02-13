@@ -28,6 +28,19 @@ def list_users(session: Session) -> List[UserEntity]:
     return session.query(UserEntity).filter_by(deleted=False).all()
 
 
+def get_or_create_user_by_email(session: Session, email: str, username: str) -> UserEntity:
+    user = session.query(UserEntity).filter_by(email=email, deleted=False).first()
+    if not user:
+        user = UserEntity(
+            user_id=email,
+            username=username,
+            email=email,
+        )
+        session.add(user)
+        session.flush()
+    return user
+
+
 def get_current_user_db_id(session: Session) -> int:
     """Resolve the configured string user_id to the integer user.id PK."""
     user_id = int(os.environ.get("Y_AGENT_USER_ID", get_or_create_user(session, "default")))

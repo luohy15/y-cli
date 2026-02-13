@@ -24,11 +24,17 @@ def _entity_to_chat(entity: ChatEntity) -> Chat:
     return Chat.from_dict(json.loads(entity.json_content))
 
 
-async def list_chats(limit: int = 10) -> List[ChatSummary]:
+def _resolve_user_id(session, user_id: Optional[int] = None) -> int:
+    if user_id is not None:
+        return user_id
+    return get_current_user_db_id(session)
+
+
+async def list_chats(limit: int = 10, user_id: Optional[int] = None) -> List[ChatSummary]:
     with get_db() as session:
-        user_id = get_current_user_db_id(session)
+        uid = _resolve_user_id(session, user_id)
         rows = (session.query(ChatEntity)
-                .filter_by(user_id=user_id)
+                .filter_by(user_id=uid)
                 .options(defer(ChatEntity.json_content))
                 .order_by(ChatEntity.updated_at.desc())
                 .limit(limit)
@@ -44,10 +50,10 @@ async def list_chats(limit: int = 10) -> List[ChatSummary]:
         ]
 
 
-async def get_chat(chat_id: str) -> Optional[Chat]:
+async def get_chat(chat_id: str, user_id: Optional[int] = None) -> Optional[Chat]:
     with get_db() as session:
-        user_id = get_current_user_db_id(session)
-        row = session.query(ChatEntity).filter_by(user_id=user_id, chat_id=chat_id).first()
+        uid = _resolve_user_id(session, user_id)
+        row = session.query(ChatEntity).filter_by(user_id=uid, chat_id=chat_id).first()
         if not row:
             return None
         try:
@@ -57,21 +63,21 @@ async def get_chat(chat_id: str) -> Optional[Chat]:
             return None
 
 
-async def add_chat(chat: Chat) -> Chat:
-    return await save_chat(chat)
+async def add_chat(chat: Chat, user_id: Optional[int] = None) -> Chat:
+    return await save_chat(chat, user_id=user_id)
 
 
-async def update_chat(chat: Chat) -> Chat:
-    existing = await get_chat(chat.id)
+async def update_chat(chat: Chat, user_id: Optional[int] = None) -> Chat:
+    existing = await get_chat(chat.id, user_id=user_id)
     if not existing:
         raise ValueError(f"Chat with id {chat.id} not found")
-    return await save_chat(chat)
+    return await save_chat(chat, user_id=user_id)
 
 
-async def delete_chat(chat_id: str) -> bool:
+async def delete_chat(chat_id: str, user_id: Optional[int] = None) -> bool:
     with get_db() as session:
-        user_id = get_current_user_db_id(session)
-        count = session.query(ChatEntity).filter_by(user_id=user_id, chat_id=chat_id).delete()
+        uid = _resolve_user_id(session, user_id)
+        count = session.query(ChatEntity).filter_by(user_id=uid, chat_id=chat_id).delete()
         return count > 0
 
 
@@ -82,13 +88,13 @@ def _extract_title(chat: Chat) -> str:
     return ""
 
 
-def _save_chat_sync(chat: Chat) -> Chat:
+def _save_chat_sync(chat: Chat, user_id: Optional[int] = None) -> Chat:
     from storage.util import get_iso8601_timestamp
     chat.update_time = get_iso8601_timestamp()
 
     with get_db() as session:
-        user_id = get_current_user_db_id(session)
-        entity = session.query(ChatEntity).filter_by(user_id=user_id, chat_id=chat.id).first()
+        uid = _resolve_user_id(session, user_id)
+        entity = session.query(ChatEntity).filter_by(user_id=uid, chat_id=chat.id).first()
         content = json.dumps(chat.to_dict())
         title = _extract_title(chat)
         if entity:
@@ -96,7 +102,7 @@ def _save_chat_sync(chat: Chat) -> Chat:
             entity.title = title
         else:
             entity = ChatEntity(
-                user_id=user_id,
+                user_id=uid,
                 chat_id=chat.id,
                 title=title,
                 json_content=content,
@@ -105,5 +111,5 @@ def _save_chat_sync(chat: Chat) -> Chat:
         return chat
 
 
-async def save_chat(chat: Chat) -> Chat:
-    return _save_chat_sync(chat)
+async def save_chat(chat: Chat, user_id: Optional[int] = None) -> Chat:
+    return _save_chat_sync(chat, user_id=user_id)

@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Optional
 
 import boto3
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
@@ -59,6 +59,10 @@ class ApproveRequest(BaseModel):
     approved: bool
 
 
+def _get_user_id(request: Request) -> int:
+    return request.state.user_id
+
+
 @router.get("/chats")
 async def get_chats():
     chats = list_cached_chats()
@@ -66,8 +70,9 @@ async def get_chats():
 
 
 @router.post("/chats", response_model=CreateChatResponse)
-async def post_create_chat(req: CreateChatRequest):
+async def post_create_chat(req: CreateChatRequest, request: Request):
     chat_id = req.chat_id or str(uuid.uuid4())
+    user_id = _get_user_id(request)
 
     # Create in DB with status=pending
     chat = await chat_service.create_chat_with_cache(
@@ -76,6 +81,7 @@ async def post_create_chat(req: CreateChatRequest):
         status="pending",
         bot_name=req.bot_name,
         prompt=req.prompt,
+        user_id=user_id,
     )
 
     # Build user message event so SSE clients see it immediately

@@ -11,15 +11,15 @@ from storage.util import get_iso8601_timestamp, generate_id
 IS_WINDOWS = sys.platform == 'win32'
 
 
-async def list_chats(limit: int = 10) -> List[ChatSummary]:
-    return await chat_repo.list_chats(limit=limit)
+async def list_chats(limit: int = 10, user_id: Optional[int] = None) -> List[ChatSummary]:
+    return await chat_repo.list_chats(limit=limit, user_id=user_id)
 
 
-async def get_chat(chat_id: str) -> Optional[Chat]:
-    return await chat_repo.get_chat(chat_id)
+async def get_chat(chat_id: str, user_id: Optional[int] = None) -> Optional[Chat]:
+    return await chat_repo.get_chat(chat_id, user_id=user_id)
 
 
-async def create_chat(messages: List[Message], external_id: Optional[str] = None, chat_id: Optional[str] = None) -> Chat:
+async def create_chat(messages: List[Message], external_id: Optional[str] = None, chat_id: Optional[str] = None, user_id: Optional[int] = None) -> Chat:
     timestamp = get_iso8601_timestamp()
     chat = Chat(
         id=chat_id if chat_id else generate_id(),
@@ -28,16 +28,16 @@ async def create_chat(messages: List[Message], external_id: Optional[str] = None
         messages=[msg for msg in messages if msg.role != 'system'],
         external_id=external_id
     )
-    return await chat_repo.add_chat(chat)
+    return await chat_repo.add_chat(chat, user_id=user_id)
 
 
-async def update_chat(chat_id: str, messages: List[Message], external_id: Optional[str] = None) -> Chat:
-    chat = await get_chat(chat_id)
+async def update_chat(chat_id: str, messages: List[Message], external_id: Optional[str] = None, user_id: Optional[int] = None) -> Chat:
+    chat = await get_chat(chat_id, user_id=user_id)
     if not chat:
         raise ValueError(f"Chat with id {chat_id} not found")
     chat.update_messages(messages)
     chat.external_id = external_id
-    return await chat_repo.update_chat(chat)
+    return await chat_repo.update_chat(chat, user_id=user_id)
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +50,7 @@ async def create_chat_with_cache(
     status: Optional[str] = None,
     bot_name: Optional[str] = None,
     prompt: Optional[str] = None,
+    user_id: Optional[int] = None,
 ) -> Chat:
     """Create chat in DB and populate cache."""
     timestamp = get_iso8601_timestamp()
@@ -61,7 +62,7 @@ async def create_chat_with_cache(
         status=status,
         bot_name=bot_name,
     )
-    chat = await chat_repo.add_chat(chat)
+    chat = await chat_repo.add_chat(chat, user_id=user_id)
     # Populate cache with chat data + transient fields
     cache_data: Dict = chat.to_dict()
     if prompt:
@@ -70,12 +71,12 @@ async def create_chat_with_cache(
     return chat
 
 
-async def get_chat_with_cache(chat_id: str) -> Optional[Dict]:
+async def get_chat_with_cache(chat_id: str, user_id: Optional[int] = None) -> Optional[Dict]:
     """Cache-aside read: check cache first, fallback to DB, backfill cache."""
     cached = get_cached_chat(chat_id)
     if cached:
         return cached
-    chat = await chat_repo.get_chat(chat_id)
+    chat = await chat_repo.get_chat(chat_id, user_id=user_id)
     if not chat:
         return None
     cache_data = chat.to_dict()
@@ -83,22 +84,22 @@ async def get_chat_with_cache(chat_id: str) -> Optional[Dict]:
     return cache_data
 
 
-async def update_chat_with_cache(chat_id: str, messages: List[Message], status: Optional[str] = None) -> Chat:
+async def update_chat_with_cache(chat_id: str, messages: List[Message], status: Optional[str] = None, user_id: Optional[int] = None) -> Chat:
     """Update chat in DB and refresh cache."""
-    chat = await get_chat(chat_id)
+    chat = await get_chat(chat_id, user_id=user_id)
     if not chat:
         raise ValueError(f"Chat with id {chat_id} not found")
     chat.update_messages(messages)
     if status is not None:
         chat.status = status
-    chat = await chat_repo.update_chat(chat)
+    chat = await chat_repo.update_chat(chat, user_id=user_id)
     cache_data = chat.to_dict()
     cache_chat(chat_id, cache_data)
     return chat
 
 
-async def delete_chat(chat_id: str) -> bool:
-    return await chat_repo.delete_chat(chat_id)
+async def delete_chat(chat_id: str, user_id: Optional[int] = None) -> bool:
+    return await chat_repo.delete_chat(chat_id, user_id=user_id)
 
 
 async def generate_share_html(chat_id: str) -> str:

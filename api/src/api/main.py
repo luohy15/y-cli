@@ -5,7 +5,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from api.controller.auth import router as auth_router
 from api.controller.chat import router as chat_router
+from api.middleware.auth import AuthMiddleware
 
 app = FastAPI(title="y-agent API")
 
@@ -15,7 +17,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(AuthMiddleware)
 
+app.include_router(auth_router)
 app.include_router(chat_router)
 
 # Serve Vite build output at root
